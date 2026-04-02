@@ -199,35 +199,44 @@ function parseCSV(text){
 function normalize(s){
   return (s||'').trim().toLowerCase()
     .replace(/\s+/g,' ')
-    .replace(/[İI]/g,'i')
-    .replace(/[Şş]/g,'s')
-    .replace(/[Ğğ]/g,'g')
-    .replace(/[Üü]/g,'u')
-    .replace(/[Öö]/g,'o')
-    .replace(/[Çç]/g,'c')
-    .replace(/[Ää]/g,'a');
+    .replace(/\u0130/g,'i').replace(/\u0131/g,'i').replace(/[iI]/g,'i')
+    .replace(/[\u015e\u015f]/g,'s')
+    .replace(/[\u011e\u011f]/g,'g')
+    .replace(/[\u00dc\u00fc]/g,'u')
+    .replace(/[\u00d6\u00f6]/g,'o')
+    .replace(/[\u00c7\u00e7]/g,'c')
+    .replace(/[\u00e4\u00c4]/g,'a');
 }
 
-function nameMatch(tahmin, gerceklesen){
-  if(!tahmin||!gerceklesen) return false;
-  const t=normalize(tahmin);
-  const g=normalize(gerceklesen);
-  return t===g || t.includes(g) || g.includes(t);
+function nameMatch(a, b){
+  if(!a||!b) return false;
+  const na=normalize(a), nb=normalize(b);
+  return na===nb || na.includes(nb) || nb.includes(na);
 }
 
 function findRow(rows, colName, val){
   const nVal=normalize(val);
   return rows.find(r=>{
-    const directKey=Object.keys(r).find(k=>normalize(k)===normalize(colName));
-    const cellVal=directKey?(r[directKey]||''):'';
-    return normalize(cellVal)===nVal;
+    const key=Object.keys(r).find(k=>normalize(k)===normalize(colName));
+    return normalize(key?r[key]:'')===nVal;
   })||null;
 }
 
 function getCol(obj, colName){
+  if(!obj) return '';
   const nTarget=normalize(colName);
   const key=Object.keys(obj).find(k=>normalize(k)===nTarget);
-  return key ? (obj[key]||'') : '';
+  return key!=null?(String(obj[key]||'')):'';
+}
+
+function fmtDate(s){
+  if(!s) return '';
+  try{
+    const d=new Date(s);
+    if(isNaN(d.getTime())) return s;
+    if(s.includes('1899')) return d.toTimeString().slice(0,5);
+    return d.toLocaleDateString('tr-TR');
+  }catch(e){return s;}
 }
 
 const KAT_MAP={
@@ -298,9 +307,9 @@ async function loadData(){
 
     const sonRow=sonuclar.find(r=>getCol(r,'guncelleme_tarihi')!='');
     if(sonRow){
-      const gt=getCol(sonRow,'guncelleme_tarihi');
-      const gs=getCol(sonRow,'guncelleme_saati');
-      document.getElementById('update-info').textContent=gt ? `Son guncelleme: ${gt}${gs?' '+gs:''}` : '—';
+      const gt=fmtDate(getCol(sonRow,'guncelleme_tarihi'));
+      const gs=fmtDate(getCol(sonRow,'guncelleme_saati'));
+      document.getElementById('update-info').textContent=gt?`Son guncelleme: ${gt}${gs?' '+gs:''}`:'—';
     } else {
       document.getElementById('update-info').textContent='—';
     }

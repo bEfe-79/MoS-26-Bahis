@@ -34,8 +34,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .stat-value.accent{color:#db0962;}
 .stat-sub{font-size:12px;color:#bbb;margin-top:3px;}
 .section-title{font-size:11px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.7px;margin:4px 0 12px;}
-.bets-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px;}
-@media(max-width:600px){.bets-grid{grid-template-columns:1fr;}}
+.bets-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:8px;}
+@media(max-width:700px){.bets-grid{grid-template-columns:1fr;}}
+.bets-group{margin-bottom:20px;}
+.bets-group-title{font-size:12px;font-weight:500;color:#fff;background:#db0962;padding:4px 12px;border-radius:6px;display:inline-block;margin-bottom:10px;letter-spacing:.5px;}
 .bet-card{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:hidden;}
 .bet-card.done{border-left:3px solid #db0962;border-radius:0 12px 12px 0;}
 .bet-card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 9px;border-bottom:0.5px solid #f0eeeb;}
@@ -76,8 +78,9 @@ tbody td{padding:10px 14px;color:#333;vertical-align:middle;}
 .pred-table tbody td{padding:9px 12px;border-bottom:0.5px solid #f7f6f4;vertical-align:top;color:#444;line-height:1.4;}
 .pred-table tbody tr:last-child td{border-bottom:none;}
 .pred-table tbody td:first-child{font-weight:500;color:#111;font-size:11px;background:#fafaf9;border-right:0.5px solid #f0eeeb;white-space:nowrap;}
-.cell-win{color:#db0962;font-weight:500;}
-.cell-open{color:#aaa;}
+.cell-win{background:#2e7d32;color:#fff;font-weight:500;border-radius:4px;padding:2px 7px;}
+.cell-wrong{background:#c62828;color:#fff;font-weight:500;border-radius:4px;padding:2px 7px;}
+.cell-open{background:#757575;color:#fff;border-radius:4px;padding:2px 7px;}
 .loading-state{padding:40px;text-align:center;color:#bbb;font-size:13px;}
 .error-state{padding:20px;text-align:center;color:#a32d2d;font-size:12px;background:#fcebeb;border-radius:8px;margin:12px 0;line-height:1.7;}
 .footer-note{font-size:12px;color:#ccc;text-align:center;margin-top:8px;padding-bottom:8px;}
@@ -257,9 +260,14 @@ function renderOzet(sonuclar,tahminler){
     +'<div class="stat-card"><div class="stat-label">En Yuksek Ciro</div><div class="stat-value accent" style="font-size:17px;">'+(tcVal?fmt(tcVal):'—')+'</div><div class="stat-sub">'+(tcKisi||'bekleniyor')+'</div></div>'
     +'</div>';
 
-  h+='<div class="section-title">Bahis Kategorileri</div><div class="bets-grid">';
+  const SAS_KEYS=['Ilk Satis','En Yuksek Ciro','En Yuksek Satis'];
+  const SAD_KEYS=['Ilk Randevu','En Fazla Randevu','Satisa Donen Randevu'];
 
-  KAT_KEYS.forEach(k=>{
+  h+='<div class="section-title">Bahis Kategorileri</div>';
+
+  [['SAS',SAS_KEYS],['SAD',SAD_KEYS]].forEach(([grupAdi,grupKeys])=>{
+    h+='<div class="bets-group"><div class="bets-group-title">'+grupAdi+'</div><div class="bets-grid">';
+    grupKeys.forEach(k=>{
     const sr=findRow(sonuclar,'kategori',k)||{};
     const grc=getCol(sr,'gerceklesen_kisi');
     const done=grc!=='';
@@ -295,8 +303,9 @@ function renderOzet(sonuclar,tahminler){
       +'<div class="bet-section"><div class="bet-section-label">'+(done?'Gerceklesen':'Suanki Lider')+'</div>'
       +(done?'<div class="result-person">'+grc+'</div><div class="result-detail">'+parts.join(' · ')+'</div>':'<div class="current-leader">'+(grc||'—')+'</div>'+lHtml)
       +'</div><div class="bet-section"><div class="bet-section-label">Kazananlar</div><div class="winners-list">'+wHtml+'</div></div></div>';
+    });
+    h+='</div></div>';
   });
-  h+='</div>';
 
   h+='<div class="section-title">Siralama</div><div class="bets-table-wrap"><table><thead><tr><th>Siralama</th><th>Isim Soyisim</th><th>Basarili Tahmin</th><th>Devam Eden</th></tr></thead><tbody>';
   const devam=KAT_KEYS.filter(k=>!getCol(findRow(sonuclar,'kategori',k)||{},'gerceklesen_kisi')).length;
@@ -326,7 +335,12 @@ function renderTahminler(sonuclar,tahminler){
     isimler.forEach(a=>{
       const row=tahminler.find(r=>getIsimSoyisim(r)===a)||{};
       const tah=getCol(row,KAT_TAH[k]);
-      h+='<td class="'+(grc&&nameMatch(tah,grc)?'cell-win':'cell-open')+'">'+(tah||'—')+'</td>';
+      const katSonuclandi=grc!=='';
+      let cls;
+      if(katSonuclandi && nameMatch(tah,grc)) cls='cell-win';
+      else if(katSonuclandi && tah!=='') cls='cell-wrong';
+      else cls='cell-open';
+      h+='<td><span class="'+cls+'">'+(tah||'—')+'</span></td>';
     });
     h+='</tr>';
   });

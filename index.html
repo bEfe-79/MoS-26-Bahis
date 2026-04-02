@@ -148,20 +148,7 @@ function cleanStr(s){
 function parseCSV(text){
   const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n');
 
-  const rawHeaders = lines[0].split(',').map(h=>cleanStr(h));
-
-  const firstKey = normalize(rawHeaders[0]);
-  const isMerged = firstKey.startsWith('kategori') && firstKey !== 'kategori';
-  const mergedFirstVal = isMerged ? rawHeaders[0].replace(/^kategori\s+/i,'').trim() : null;
-
-  const headers = rawHeaders.map((h,i)=>{
-    if(i===0 && isMerged) return 'kategori';
-    return h;
-  });
-
-  const dataLines = lines.slice(1);
-
-  const rows = dataLines.map((line,lineIdx)=>{
+  function splitLine(line){
     const vals=[];
     let cur='', inQ=false;
     for(let i=0;i<line.length;i++){
@@ -171,18 +158,35 @@ function parseCSV(text){
       else cur+=c;
     }
     vals.push(cleanStr(cur));
+    return vals;
+  }
+
+  const rawHeaders = splitLine(lines[0]);
+  const firstNorm = normalize(rawHeaders[0]);
+
+  let headers, dataStartIdx, extraFirstRow;
+
+  if(firstNorm.startsWith('kategori') && firstNorm !== 'kategori'){
+    const extractedVal = rawHeaders[0].replace(/^[Kk]ategori\s+/,'').trim();
+    headers = ['kategori', ...rawHeaders.slice(1)];
+    const firstDataVals = splitLine(lines[1]||'');
+    extraFirstRow = {kategori: extractedVal};
+    headers.slice(1).forEach((h,i)=> extraFirstRow[h] = firstDataVals[i]||'');
+    dataStartIdx = 2;
+  } else {
+    headers = rawHeaders;
+    extraFirstRow = null;
+    dataStartIdx = 1;
+  }
+
+  const rows = lines.slice(dataStartIdx).map(line=>{
+    const vals = splitLine(line);
     const obj={};
-    headers.forEach((h,i)=>{
-      if(i===0 && isMerged && lineIdx===0){
-        obj[h] = mergedFirstVal||'';
-      } else {
-        obj[h]=vals[i]||'';
-      }
-    });
+    headers.forEach((h,i)=>obj[h]=vals[i]||'');
     return obj;
   }).filter(r=>Object.values(r).some(v=>v!==''));
 
-  return rows;
+  return extraFirstRow ? [extraFirstRow, ...rows] : rows;
 }
 
 function normalize(s){

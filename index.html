@@ -74,13 +74,13 @@ tbody td{padding:10px 14px;color:#333;vertical-align:middle;}
 .devam{font-size:12px;color:#bbb;}
 .pred-table-wrap{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:auto;margin-bottom:20px;}
 .pred-table{width:100%;border-collapse:collapse;font-size:12px;min-width:580px;}
-.pred-table thead th{padding:9px 12px;text-align:left;font-size:10px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid #f0eeeb;background:#fafaf9;white-space:nowrap;}
-.pred-table tbody td{padding:9px 12px;border-bottom:0.5px solid #f7f6f4;vertical-align:top;color:#444;line-height:1.4;}
+.pred-table thead th{padding:6px 8px;text-align:center;font-size:10px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid #f0eeeb;background:#fafaf9;white-space:nowrap;}
+.pred-table tbody td{padding:6px 8px;border-bottom:0.5px solid #f7f6f4;vertical-align:middle;text-align:center;line-height:1.4;}
 .pred-table tbody tr:last-child td{border-bottom:none;}
-.pred-table tbody td:first-child{font-weight:500;color:#111;font-size:11px;background:#fafaf9;border-right:0.5px solid #f0eeeb;white-space:nowrap;}
-.cell-win{background:#2e7d32;color:#fff;font-weight:500;border-radius:4px;padding:2px 7px;}
-.cell-wrong{background:#c62828;color:#fff;font-weight:500;border-radius:4px;padding:2px 7px;}
-.cell-open{background:#757575;color:#fff;border-radius:4px;padding:2px 7px;}
+.pred-table tbody td:first-child{font-weight:500;color:#111;font-size:11px;background:#fafaf9;border-right:0.5px solid #f0eeeb;white-space:nowrap;text-align:left;padding:6px 10px;}
+.cell-win{background:#2e7d32;color:#fff;font-weight:500;border-radius:4px;padding:2px 6px;white-space:nowrap;display:inline-block;font-size:11px;}
+.cell-wrong{background:#c62828;color:#fff;font-weight:500;border-radius:4px;padding:2px 6px;white-space:nowrap;display:inline-block;font-size:11px;}
+.cell-open{background:#757575;color:#fff;border-radius:4px;padding:2px 6px;white-space:nowrap;display:inline-block;font-size:11px;}
 .loading-state{padding:40px;text-align:center;color:#bbb;font-size:13px;}
 .error-state{padding:20px;text-align:center;color:#a32d2d;font-size:12px;background:#fcebeb;border-radius:8px;margin:12px 0;line-height:1.7;}
 .footer-note{font-size:12px;color:#ccc;text-align:center;margin-top:8px;padding-bottom:8px;}
@@ -326,7 +326,7 @@ function renderOzet(sonuclar,tahminler){
 function renderTahminler(sonuclar,tahminler){
   const isimler=tahminler.map(r=>getIsimSoyisim(r)).filter(Boolean);
   let h='<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>';
-  isimler.forEach(a=>{h+='<th>'+a.split(' ').map((p,i)=>i===0?p:p[0]+'.').join(' ')+'</th>';});
+  isimler.forEach(a=>{const kisa=a.trim().split(' ').map(p=>p[0]?p[0]+'.':'').join('');h+='<th>'+kisa+'</th>';});
   h+='</tr></thead><tbody>';
   KAT_KEYS.forEach(k=>{
     const sr=findRow(sonuclar,'kategori',k)||{};
@@ -340,7 +340,9 @@ function renderTahminler(sonuclar,tahminler){
       if(katSonuclandi && nameMatch(tah,grc)) cls='cell-win';
       else if(katSonuclandi && tah!=='') cls='cell-wrong';
       else cls='cell-open';
-      h+='<td><span class="'+cls+'">'+(tah||'—')+'</span></td>';
+      const tahParts=tah.split(' ');
+      const tahGoster=tahParts.length>1?tahParts[0]+' '+tahParts[1][0]+'.':tah;
+      h+='<td><span class="'+cls+'">'+(tahGoster||'—')+'</span></td>';
     });
     h+='</tr>';
   });

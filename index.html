@@ -138,7 +138,9 @@ function getCol(obj,col){
   return k2!=null?String(obj[k2]==null?'':obj[k2]).trim():'';
 }
 
-function findRow(rows,col,val){
+function getIsimSoyisim(row){
+  return getCol(row,'isim_soyisim')||getCol(row,'isim soyisim');
+}
   const t=norm(val);
   return rows.find(r=>norm(getCol(r,col))===t)||null;
 }
@@ -225,7 +227,7 @@ function renderOzet(sonuclar,tahminler){
   sonuclar.forEach(r=>{if(getCol(r,'gerceklesen_kisi')!=='')snc++;});
 
   const skorlar={};
-  tahminler.forEach(r=>{const isim=getCol(r,'isim soyisim');if(isim)skorlar[isim]=0;});
+  tahminler.forEach(r=>{const isim=getIsimSoyisim(r);if(isim)skorlar[isim]=0;});
 
   const kazMap={};
   KAT_KEYS.forEach(k=>{
@@ -234,7 +236,7 @@ function renderOzet(sonuclar,tahminler){
     kazMap[k]=[];
     if(!grc)return;
     tahminler.forEach(r=>{
-      const isim=getCol(r,'isim soyisim');
+      const isim=getIsimSoyisim(r);
       const tah=getCol(r,KAT_TAH[k]);
       if(nameMatch(tah,grc)){kazMap[k].push(isim);if(skorlar[isim]!==undefined)skorlar[isim]++;}
     });
@@ -306,7 +308,7 @@ function renderOzet(sonuclar,tahminler){
 }
 
 function renderTahminler(sonuclar,tahminler){
-  const isimler=tahminler.map(r=>getCol(r,'isim soyisim')).filter(Boolean);
+  const isimler=tahminler.map(r=>getIsimSoyisim(r)).filter(Boolean);
   let h='<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>';
   isimler.forEach(a=>{h+='<th>'+a.split(' ').map((p,i)=>i===0?p:p[0]+'.').join(' ')+'</th>';});
   h+='</tr></thead><tbody>';
@@ -315,7 +317,7 @@ function renderTahminler(sonuclar,tahminler){
     const grc=getCol(sr,'gerceklesen_kisi');
     h+='<tr><td>'+KAT_LABEL[k]+'</td>';
     isimler.forEach(a=>{
-      const row=tahminler.find(r=>getCol(r,'isim soyisim')===a)||{};
+      const row=tahminler.find(r=>getIsimSoyisim(r)===a)||{};
       const tah=getCol(row,KAT_TAH[k]);
       h+='<td class="'+(grc&&nameMatch(tah,grc)?'cell-win':'cell-open')+'">'+(tah||'—')+'</td>';
     });

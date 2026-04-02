@@ -147,15 +147,24 @@ function cleanStr(s){
 
 function parseCSV(text){
   const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n');
-  let headerIdx=0;
-  for(let i=0;i<Math.min(3,lines.length);i++){
-    const cells=lines[i].split(',').map(h=>cleanStr(h).toLowerCase());
-    if(cells.includes('kategori')||cells.includes('isim soyisim')||cells.some(c=>c.includes('isim'))){
-      headerIdx=i; break;
-    }
+
+  const rawHeaders = lines[0].split(',').map(h=>cleanStr(h));
+
+  const headers = rawHeaders.map(h=>{
+    const n = normalize(h);
+    if(n.startsWith('kategori')) return 'kategori';
+    return h;
+  });
+
+  let dataLines = lines.slice(1);
+
+  if(normalize(rawHeaders[0]).startsWith('kategori') && normalize(rawHeaders[0])!=='kategori'){
+    const firstVal = normalize(rawHeaders[0]).replace(/^kategori\s*/,'');
+    const fakeFirstLine = firstVal + ',' + dataLines[0].split(',').slice(1).join(',');
+    dataLines = [fakeFirstLine, ...dataLines.slice(1)];
   }
-  const headers = lines[headerIdx].split(',').map(h=>cleanStr(h));
-  return lines.slice(headerIdx+1).map(line=>{
+
+  return dataLines.map(line=>{
     const vals=[];
     let cur='', inQ=false;
     for(let i=0;i<line.length;i++){
@@ -192,7 +201,11 @@ function nameMatch(tahmin, gerceklesen){
 
 function findRow(rows, colName, val){
   const nVal=normalize(val);
-  return rows.find(r=>normalize(getCol(r,colName))===nVal)||null;
+  return rows.find(r=>{
+    const directKey=Object.keys(r).find(k=>normalize(k)===normalize(colName));
+    const cellVal=directKey?(r[directKey]||''):'';
+    return normalize(cellVal)===nVal;
+  })||null;
 }
 
 function getCol(obj, colName){

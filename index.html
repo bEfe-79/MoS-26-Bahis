@@ -141,23 +141,50 @@ function fetchCSV(sheet){
   });
 }
 
+function cleanStr(s){
+  return (s||'').replace(/^"|"$/g,'').replace(/^\uFEFF/,'').trim();
+}
+
 function parseCSV(text){
-  const lines = text.trim().split('\n');
-  const headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n');
+  const headers = lines[0].split(',').map(h=>cleanStr(h));
   return lines.slice(1).map(line=>{
     const vals=[];
     let cur='', inQ=false;
     for(let i=0;i<line.length;i++){
       const c=line[i];
       if(c==='"'){inQ=!inQ;}
-      else if(c===','&&!inQ){vals.push(cur.trim());cur='';}
+      else if(c===','&&!inQ){vals.push(cleanStr(cur));cur='';}
       else cur+=c;
     }
-    vals.push(cur.trim());
+    vals.push(cleanStr(cur));
     const obj={};
-    headers.forEach((h,i)=>obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim());
+    headers.forEach((h,i)=>obj[h]=vals[i]||'');
     return obj;
   }).filter(r=>Object.values(r).some(v=>v!==''));
+}
+
+function normalize(s){
+  return (s||'').trim().toLowerCase()
+    .replace(/\s+/g,' ')
+    .replace(/[İI]/g,'i')
+    .replace(/[Şş]/g,'s')
+    .replace(/[Ğğ]/g,'g')
+    .replace(/[Üü]/g,'u')
+    .replace(/[Öö]/g,'o')
+    .replace(/[Çç]/g,'c')
+    .replace(/[Ää]/g,'a');
+}
+
+function findRow(rows, colName, val){
+  const nVal=normalize(val);
+  return rows.find(r=>normalize(r[colName])===nVal)||null;
+}
+
+function getCol(obj, colName){
+  const nTarget=normalize(colName);
+  const key=Object.keys(obj).find(k=>normalize(k)===nTarget);
+  return key ? (obj[key]||'') : '';
 }
 
 const KAT_MAP={
@@ -213,10 +240,10 @@ async function loadData(){
     renderOzet(sonuclar, tahminler);
     renderTahminler(sonuclar, tahminler);
 
-    const sonRow=sonuclar.find(r=>r['guncelleme_tarihi']&&r['guncelleme_tarihi']!='');
+    const sonRow=sonuclar.find(r=>getCol(r,'guncelleme_tarihi')!='');
     if(sonRow){
-      const gt=sonRow['guncelleme_tarihi']||'';
-      const gs=sonRow['guncelleme_saati']||'';
+      const gt=getCol(sonRow,'guncelleme_tarihi');
+      const gs=getCol(sonRow,'guncelleme_saati');
       document.getElementById('update-info').textContent=gt ? `Son guncelleme: ${gt}${gs?' '+gs:''}` : '—';
     } else {
       document.getElementById('update-info').textContent='—';
@@ -236,26 +263,26 @@ async function loadData(){
 function renderOzet(sonuclar, tahminler){
   const katKeys=Object.keys(KAT_MAP);
   let sonuclananSayisi=0;
-  sonuclar.forEach(r=>{if((r['gerceklesen_kisi']||'').trim()!='') sonuclananSayisi++;});
+  sonuclar.forEach(r=>{if(getCol(r,'gerceklesen_kisi').trim()!='') sonuclananSayisi++;});
 
   const skorlar={};
   tahminler.forEach(r=>{
-    const isim=(r['İsim Soyisim']||'').trim();
+    const isim=getCol(r,'isim soyisim').trim();
     if(isim) skorlar[isim]=0;
   });
 
   const kazananlarMap={};
   katKeys.forEach(k=>{
     const tahCol=KAT_MAP[k];
-    const sonRow=sonuclar.find(r=>r['kategori']===k)||{};
-    const gerceklesen=(sonRow['gerceklesen_kisi']||'').trim().toLowerCase();
+    const sonRow=findRow(sonuclar,'kategori',k)||{};
+    const gerceklesen=normalize(getCol(sonRow,'gerceklesen_kisi'));
     kazananlarMap[k]=[];
     if(!gerceklesen) return;
     tahminler.forEach(r=>{
-      const isim=(r['İsim Soyisim']||'').trim();
-      const tah=(r[tahCol]||'').trim().toLowerCase();
+      const isim=getCol(r,'isim soyisim').trim();
+      const tah=normalize(getCol(r,tahCol));
       if(tah===gerceklesen){
-        kazananlarMap[k].push((r['İsim Soyisim']||'').trim());
+        kazananlarMap[k].push(isim);
         if(skorlar[isim]!==undefined) skorlar[isim]++;
       }
     });
@@ -263,9 +290,9 @@ function renderOzet(sonuclar, tahminler){
 
   const sorted=Object.entries(skorlar).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
 
-  const topCiro=sonuclar.find(r=>r['kategori']==='En Yuksek Ciro')||{};
-  const topCiroVal=topCiro['toplam_ciro']||topCiro['ciro']||'';
-  const topCiroKisi=topCiro['gerceklesen_kisi']||'';
+  const topCiroRow=findRow(sonuclar,'kategori','En Yuksek Ciro')||{};
+  const topCiroVal=getCol(topCiroRow,'toplam_ciro')||getCol(topCiroRow,'ciro')||'';
+  const topCiroKisi=getCol(topCiroRow,'gerceklesen_kisi')||'';
 
   let html=`<div class="summary-row">
     <div class="stat-card"><div class="stat-label">Toplam Bahis</div><div class="stat-value">6</div><div class="stat-sub">kategori</div></div>
@@ -277,15 +304,15 @@ function renderOzet(sonuclar, tahminler){
   html+=`<div class="section-title">Bahis Kategorileri</div><div class="bets-grid">`;
 
   katKeys.forEach(k=>{
-    const sonRow=sonuclar.find(r=>r['kategori']===k)||{};
-    const gerceklesen=(sonRow['gerceklesen_kisi']||'').trim();
+    const sonRow=findRow(sonuclar,'kategori',k)||{};
+    const gerceklesen=getCol(sonRow,'gerceklesen_kisi').trim();
     const done=gerceklesen!='';
-    const tarih=sonRow['tarih']||'';
-    const saat=sonRow['saat']||'';
-    const firma=sonRow['firma_adi']||'';
-    const ciro=sonRow['ciro']||'';
+    const tarih=getCol(sonRow,'tarih');
+    const saat=getCol(sonRow,'saat');
+    const firma=getCol(sonRow,'firma_adi');
+    const ciro=getCol(sonRow,'ciro');
     const extraCol=EXTRA_COL[k];
-    const extraVal=extraCol?(sonRow[extraCol]||''):'';
+    const extraVal=extraCol?getCol(sonRow,extraCol):'';
 
     let detailParts=[];
     if(tarih) detailParts.push(tarih);
@@ -369,7 +396,7 @@ function renderOzet(sonuclar, tahminler){
 
 function renderTahminler(sonuclar, tahminler){
   const katKeys=Object.keys(KAT_MAP);
-  const isimler=tahminler.map(r=>(r['İsim Soyisim']||'').trim()).filter(Boolean);
+  const isimler=tahminler.map(r=>getCol(r,'isim soyisim').trim()).filter(Boolean);
 
   let html=`<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>`;
   isimler.forEach(a=>{
@@ -380,13 +407,13 @@ function renderTahminler(sonuclar, tahminler){
 
   katKeys.forEach(k=>{
     const tahCol=KAT_MAP[k];
-    const sonRow=sonuclar.find(r=>r['kategori']===k)||{};
-    const gerceklesen=(sonRow['gerceklesen_kisi']||'').trim().toLowerCase();
+    const sonRow=findRow(sonuclar,'kategori',k)||{};
+    const gerceklesen=normalize(getCol(sonRow,'gerceklesen_kisi'));
     html+=`<tr><td>${KAT_LABEL[k]}</td>`;
     isimler.forEach(a=>{
-      const row=tahminler.find(r=>(r['İsim Soyisim']||'').trim()===a)||{};
-      const tah=(row[tahCol]||'').trim();
-      const isWin=gerceklesen&&tah.toLowerCase()===gerceklesen;
+      const row=tahminler.find(r=>getCol(r,'isim soyisim').trim()===a)||{};
+      const tah=getCol(row,tahCol).trim();
+      const isWin=gerceklesen&&normalize(tah)===gerceklesen;
       html+=`<td class="${isWin?'cell-win':'cell-open'}">${tah||'—'}</td>`;
     });
     html+=`</tr>`;

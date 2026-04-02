@@ -141,6 +141,8 @@ function getCol(obj,col){
 function getIsimSoyisim(row){
   return getCol(row,'isim_soyisim')||getCol(row,'isim soyisim');
 }
+
+function findRow(rows,col,val){
   const t=norm(val);
   return rows.find(r=>norm(getCol(r,col))===t)||null;
 }

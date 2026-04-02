@@ -326,7 +326,7 @@ function renderOzet(sonuclar,tahminler){
 function renderTahminler(sonuclar,tahminler){
   const isimler=tahminler.map(r=>getIsimSoyisim(r)).filter(Boolean);
   let h='<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>';
-  isimler.forEach(a=>{const kisa=a.trim().split(' ').map(p=>p[0]?p[0]+'.':'').join('');h+='<th>'+kisa+'</th>';});
+  isimler.forEach(a=>{const p=a.trim().split(' ');const kisa=p[0]+(p[1]?' '+p[1][0]+'.':'');h+='<th>'+kisa+'</th>';});
   h+='</tr></thead><tbody>';
   KAT_KEYS.forEach(k=>{
     const sr=findRow(sonuclar,'kategori',k)||{};

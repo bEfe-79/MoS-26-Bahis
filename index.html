@@ -21,13 +21,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .refresh-icon.spin{animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .update-info{font-size:11px;color:#bbb;text-align:right;}
-
 .tabs{display:flex;border-bottom:0.5px solid #e0ded9;margin-bottom:20px;}
 .tab{font-size:13px;font-weight:500;color:#aaa;padding:8px 18px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color .15s,border-color .15s;background:none;border-top:none;border-left:none;border-right:none;}
 .tab.active{color:#db0962;border-bottom:2px solid #db0962;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
-
 .summary-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px;}
 @media(max-width:600px){.summary-row{grid-template-columns:repeat(2,minmax(0,1fr));}}
 .stat-card{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;padding:14px 16px;}
@@ -35,7 +33,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .stat-value{font-size:21px;font-weight:500;color:#111;}
 .stat-value.accent{color:#db0962;}
 .stat-sub{font-size:12px;color:#bbb;margin-top:3px;}
-
 .section-title{font-size:11px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.7px;margin:4px 0 12px;}
 .bets-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px;}
 @media(max-width:600px){.bets-grid{grid-template-columns:1fr;}}
@@ -58,7 +55,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pending-name{font-size:12px;color:#aaa;font-style:italic;}
 .current-leader{font-size:13px;font-weight:500;color:#555;}
 .current-detail{font-size:11px;color:#aaa;margin-top:1px;}
-
 .bets-table-wrap{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:hidden;margin-bottom:20px;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
 thead tr{background:#fafaf9;}
@@ -74,7 +70,6 @@ tbody td{padding:10px 14px;color:#333;vertical-align:middle;}
 .rank-1st{color:#b8860b;font-weight:500;}
 .cups{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
 .devam{font-size:12px;color:#bbb;}
-
 .pred-table-wrap{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:auto;margin-bottom:20px;}
 .pred-table{width:100%;border-collapse:collapse;font-size:12px;min-width:580px;}
 .pred-table thead th{padding:9px 12px;text-align:left;font-size:10px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid #f0eeeb;background:#fafaf9;white-space:nowrap;}
@@ -120,386 +115,212 @@ tbody td{padding:10px 14px;color:#333;vertical-align:middle;}
 </div>
 
 <script>
-const SHEET_ID = '1NHM7qLI3EyrgjYTFCXMbSEolOBLMfGJ32nn86e5r-LU';
-const CUP_GOLD='#b8860b', CUP_SILVER='#8a8a8a', CUP_BRONZE='#a0522d', CUP_OTHER='#db0962';
+const API_URL='https://script.google.com/macros/s/AKfycbwBJNlAdKxwAuRnJvPTzfwzWDrLi72grGZTFULCWLeIUFIRA4nodQfAHoLmYA1ImZBLcQ/exec';
+const CUP_GOLD='#b8860b',CUP_SILVER='#8a8a8a',CUP_BRONZE='#a0522d',CUP_OTHER='#db0962';
 
-function cupSVG(color){
-  return `<svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;display:inline-block;vertical-align:middle;">
-    <path d="M5 2h8v6a4 4 0 0 1-8 0V2z" fill="${color}" opacity=".9"/>
-    <path d="M3 2h2v3a2 2 0 0 1-2-2V2z" fill="${color}" opacity=".5"/>
-    <path d="M13 2h2v1a2 2 0 0 1-2 2V2z" fill="${color}" opacity=".5"/>
-    <rect x="7.5" y="11" width="3" height="3" fill="${color}" opacity=".7"/>
-    <rect x="5.5" y="14" width="7" height="1.5" rx="0.5" fill="${color}" opacity=".8"/>
-  </svg>`;
-}
+function cupSVG(c){return '<svg viewBox="0 0 18 18" fill="none" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"><path d="M5 2h8v6a4 4 0 0 1-8 0V2z" fill="'+c+'" opacity=".9"/><path d="M3 2h2v3a2 2 0 0 1-2-2V2z" fill="'+c+'" opacity=".5"/><path d="M13 2h2v1a2 2 0 0 1-2 2V2z" fill="'+c+'" opacity=".5"/><rect x="7.5" y="11" width="3" height="3" fill="'+c+'" opacity=".7"/><rect x="5.5" y="14" width="7" height="1.5" rx="0.5" fill="'+c+'" opacity=".8"/></svg>';}
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwBJNlAdKxwAuRnJvPTzfwzWDrLi72grGZTFULCWLeIUFIRA4nodQfAHoLmYA1ImZBLcQ/exec';
-
-function fetchSheet(sheet){
-  return fetch(APPS_SCRIPT_URL)
-    .then(r=>{
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.json();
-    })
-    .then(data=>{
-      if(sheet==='Sonuclar') return data.sonuclar||[];
-      if(sheet==='Tahminler') return data.tahminler||[];
-      return [];
-    });
-}
-
-function cleanStr(s){
-  return (s||'').replace(/^"|"$/g,'').replace(/^\uFEFF/,'').trim();
-}
-
-function parseCSV(text){
-  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n');
-
-  function splitLine(line){
-    const vals=[];
-    let cur='', inQ=false;
-    for(let i=0;i<line.length;i++){
-      const c=line[i];
-      if(c==='"'){inQ=!inQ;}
-      else if(c===','&&!inQ){vals.push(cleanStr(cur));cur='';}
-      else cur+=c;
-    }
-    vals.push(cleanStr(cur));
-    return vals;
-  }
-
-  const rawHeaders = splitLine(lines[0]);
-  const firstNorm = normalize(rawHeaders[0]);
-
-  let headers, dataStartIdx, extraFirstRow;
-
-  if(firstNorm.startsWith('kategori') && firstNorm !== 'kategori'){
-    const extractedVal = rawHeaders[0].replace(/^[Kk]ategori\s+/,'').trim();
-    headers = ['kategori', ...rawHeaders.slice(1)];
-    const firstDataVals = splitLine(lines[1]||'');
-    extraFirstRow = {kategori: extractedVal};
-    headers.slice(1).forEach((h,i)=> extraFirstRow[h] = firstDataVals[i]||'');
-    dataStartIdx = 2;
-  } else {
-    headers = rawHeaders;
-    extraFirstRow = null;
-    dataStartIdx = 1;
-  }
-
-  const rows = lines.slice(dataStartIdx).map(line=>{
-    const vals = splitLine(line);
-    const obj={};
-    headers.forEach((h,i)=>obj[h]=vals[i]||'');
-    return obj;
-  }).filter(r=>Object.values(r).some(v=>v!==''));
-
-  return extraFirstRow ? [extraFirstRow, ...rows] : rows;
-}
-
-function normalize(s){
-  return (s||'').trim().toLowerCase()
+function norm(s){
+  return String(s==null?'':s).trim().toLowerCase()
     .replace(/\s+/g,' ')
-    .replace(/\u0130/g,'i').replace(/\u0131/g,'i').replace(/[iI]/g,'i')
-    .replace(/[\u015e\u015f]/g,'s')
-    .replace(/[\u011e\u011f]/g,'g')
-    .replace(/[\u00dc\u00fc]/g,'u')
-    .replace(/[\u00d6\u00f6]/g,'o')
-    .replace(/[\u00c7\u00e7]/g,'c')
-    .replace(/[\u00e4\u00c4]/g,'a');
+    .replace(/\u0049|\u0130/g,'i').replace(/\u0131/g,'i')
+    .replace(/\u015e|\u015f/g,'s').replace(/\u011e|\u011f/g,'g')
+    .replace(/\u00dc|\u00fc/g,'u').replace(/\u00d6|\u00f6/g,'o')
+    .replace(/\u00c7|\u00e7/g,'c');
 }
 
-function nameMatch(a, b){
-  if(!a||!b) return false;
-  const na=normalize(a), nb=normalize(b);
-  return na===nb || na.includes(nb) || nb.includes(na);
+function getCol(obj,col){
+  if(!obj)return'';
+  const t=norm(col);
+  const k=Object.keys(obj).find(k=>norm(k)===t);
+  return k!=null?String(obj[k]==null?'':obj[k]).trim():'';
 }
 
-function findRow(rows, colName, val){
-  const nVal=normalize(val);
-  return rows.find(r=>{
-    const key=Object.keys(r).find(k=>normalize(k)===normalize(colName));
-    return normalize(key?r[key]:'')===nVal;
-  })||null;
+function findRow(rows,col,val){
+  const t=norm(val);
+  return rows.find(r=>norm(getCol(r,col))===t)||null;
 }
 
-function getCol(obj, colName){
-  if(!obj) return '';
-  const nTarget=normalize(colName);
-  const key=Object.keys(obj).find(k=>normalize(k)===nTarget);
-  return key!=null?(String(obj[key]||'')):'';
+function nameMatch(a,b){
+  if(!a||!b)return false;
+  const na=norm(a),nb=norm(b);
+  return na===nb||na.includes(nb)||nb.includes(na);
 }
 
-function getIsim(row){
-  const keys = Object.keys(row);
-  const found = keys.find(k=>normalize(k)==='isim soyisim');
-  return found ? String(row[found]||'').trim() : '';
-}
-  if(!s) return '';
+function fmtDate(s){
+  if(!s||s==='')return'';
   try{
     const d=new Date(s);
-    if(isNaN(d.getTime())) return s;
-    if(s.includes('1899')) return d.toTimeString().slice(0,5);
+    if(isNaN(d.getTime()))return String(s);
+    if(String(s).includes('1899'))return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);
     return d.toLocaleDateString('tr-TR');
-  }catch(e){return s;}
+  }catch(e){return String(s);}
 }
-
-const KAT_MAP={
-  'Ilk Satis':           'İlk Satış',
-  'Ilk Randevu':         'İlk Randevu',
-  'En Yuksek Ciro':      'İlk hafta En Yüksek Ciro',
-  'En Yuksek Satis':     'İlk Hafta En Yüksek Satış',
-  'En Fazla Randevu':    'İlk Hafta En Fazla Randevu',
-  'Satisa Donen Randevu':'İlk Hafta En Fazla Satışa Dönen Randevu'
-};
-
-function getTahminCol(row, katKey){
-  const tahCol = KAT_MAP[katKey];
-  const val = getCol(row, tahCol);
-  if(val) return val;
-  const keys = Object.keys(row);
-  const nTarget = normalize(tahCol);
-  const found = keys.find(k=>normalize(k)===nTarget);
-  return found ? String(row[found]||'').trim() : '';
-}
-
-const KAT_LABEL={
-  'Ilk Satis':           'Ilk Satis',
-  'Ilk Randevu':         'Ilk Randevu',
-  'En Yuksek Ciro':      'Ilk Hafta En Yuksek Ciro',
-  'En Yuksek Satis':     'Ilk Hafta En Yuksek Satis',
-  'En Fazla Randevu':    'Ilk Hafta En Fazla Randevu',
-  'Satisa Donen Randevu':'En Fazla Satisa Donen Randevu'
-};
-
-const EXTRA_COL={
-  'En Yuksek Ciro':      'toplam_ciro',
-  'En Yuksek Satis':     'toplam_satis',
-  'En Fazla Randevu':    'toplam_randevu',
-  'Satisa Donen Randevu':'toplam_satisa_donen'
-};
 
 function fmt(n){
-  if(!n||n==='') return '';
+  if(!n||n==='')return'';
   const num=parseFloat(String(n).replace(/[^0-9.]/g,''));
-  if(isNaN(num)) return n;
-  return '₺'+Math.round(num).toLocaleString('tr-TR');
+  if(isNaN(num))return String(n);
+  return '\u20ba'+Math.round(num).toLocaleString('tr-TR');
 }
 
 function initials(name){
-  const p=name.trim().split(' ');
-  return (p[0]?.[0]||'')+(p[1]?.[0]||'');
+  const p=String(name).trim().split(' ');
+  return(p[0]?.[0]||'')+(p[1]?.[0]||'');
 }
+
+const KAT_KEYS=['Ilk Satis','Ilk Randevu','En Yuksek Ciro','En Yuksek Satis','En Fazla Randevu','Satisa Donen Randevu'];
+
+const KAT_LABEL={
+  'Ilk Satis':'Ilk Satis',
+  'Ilk Randevu':'Ilk Randevu',
+  'En Yuksek Ciro':'Ilk Hafta En Yuksek Ciro',
+  'En Yuksek Satis':'Ilk Hafta En Yuksek Satis',
+  'En Fazla Randevu':'Ilk Hafta En Fazla Randevu',
+  'Satisa Donen Randevu':'En Fazla Satisa Donen Randevu'
+};
+
+const KAT_TAH={
+  'Ilk Satis':'Ilk Satis',
+  'Ilk Randevu':'Ilk Randevu',
+  'En Yuksek Ciro':'Ilk hafta En Yuksek Ciro',
+  'En Yuksek Satis':'Ilk Hafta En Yuksek Satis',
+  'En Fazla Randevu':'Ilk Hafta En Fazla Randevu',
+  'Satisa Donen Randevu':'Ilk Hafta En Fazla Satisa Donen Randevu'
+};
+
+const EXTRA_COL={
+  'En Yuksek Ciro':'toplam_ciro',
+  'En Yuksek Satis':'toplam_satis',
+  'En Fazla Randevu':'toplam_randevu',
+  'Satisa Donen Randevu':'toplam_satisa_donen'
+};
 
 async function loadData(){
   const btn=document.getElementById('refresh-btn');
   const icon=document.getElementById('refresh-icon');
-  btn.disabled=true;
-  icon.classList.add('spin');
-
+  btn.disabled=true; icon.classList.add('spin');
   try{
-    const data = await fetch(APPS_SCRIPT_URL).then(r=>{
-      if(!r.ok) throw new Error('HTTP '+r.status);
-      return r.json();
-    });
-    const sonuclar = (data.sonuclar||[]).map(r=>{
-      const obj={};
-      Object.keys(r).forEach(k=>obj[k]=r[k]===null||r[k]===undefined?'':String(r[k]));
-      return obj;
-    });
-    const tahminler = (data.tahminler||[]).map(r=>{
-      const obj={};
-      Object.keys(r).forEach(k=>obj[k]=r[k]===null||r[k]===undefined?'':String(r[k]));
-      return obj;
-    });
-    console.log('SONUCLAR keys:', sonuclar[0]?Object.keys(sonuclar[0]):[]);
-    console.log('SONUCLAR row0:', sonuclar[0]);
-    console.log('SONUCLAR rows:', sonuclar.map(r=>getCol(r,'kategori')+'|'+getCol(r,'gerceklesen_kisi')));
-    console.log('TAHMINLER keys:', tahminler[0]?Object.keys(tahminler[0]):[]);
-    console.log('TAHMINLER row0:', tahminler[0]);
-    renderOzet(sonuclar, tahminler);
-    renderTahminler(sonuclar, tahminler);
-
-    const sonRow=sonuclar.find(r=>getCol(r,'guncelleme_tarihi')!='');
-    if(sonRow){
-      const gt=fmtDate(getCol(sonRow,'guncelleme_tarihi'));
-      const gs=fmtDate(getCol(sonRow,'guncelleme_saati'));
-      document.getElementById('update-info').textContent=gt?`Son guncelleme: ${gt}${gs?' '+gs:''}`:'—';
-    } else {
-      document.getElementById('update-info').textContent='—';
-    }
-  } catch(e){
-    document.getElementById('ozet-content').innerHTML=`<div class="error-state">
-      Veri yuklenemedi: ${e.message}<br>
-      Sheets'in "Web'de herkese acik" ayarinda oldugunu kontrol edin.<br>
-      <small style="color:#bbb;">SHEET_ID: ${SHEET_ID}</small>
-    </div>`;
-  } finally{
-    btn.disabled=false;
-    icon.classList.remove('spin');
-  }
+    const data=await fetch(API_URL).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+    const clean=arr=>(arr||[]).map(r=>{const o={};Object.keys(r).forEach(k=>o[k]=r[k]==null?'':String(r[k]));return o;});
+    const sonuclar=clean(data.sonuclar);
+    const tahminler=clean(data.tahminler);
+    renderOzet(sonuclar,tahminler);
+    renderTahminler(sonuclar,tahminler);
+    const sr=sonuclar.find(r=>getCol(r,'guncelleme_tarihi')!=='');
+    if(sr){
+      const gt=fmtDate(getCol(sr,'guncelleme_tarihi'));
+      const gs=fmtDate(getCol(sr,'guncelleme_saati'));
+      document.getElementById('update-info').textContent='Son guncelleme: '+gt+(gs?' '+gs:'');
+    }else{document.getElementById('update-info').textContent='—';}
+  }catch(e){
+    document.getElementById('ozet-content').innerHTML='<div class="error-state">Veri yuklenemedi: '+e.message+'</div>';
+  }finally{btn.disabled=false;icon.classList.remove('spin');}
 }
 
-function renderOzet(sonuclar, tahminler){
-  const katKeys=Object.keys(KAT_MAP);
-  let sonuclananSayisi=0;
-  sonuclar.forEach(r=>{if(getCol(r,'gerceklesen_kisi').trim()!='') sonuclananSayisi++;});
+function renderOzet(sonuclar,tahminler){
+  let snc=0;
+  sonuclar.forEach(r=>{if(getCol(r,'gerceklesen_kisi')!=='')snc++;});
 
   const skorlar={};
-  tahminler.forEach(r=>{
-    const isim=getIsim(r);
-    if(isim) skorlar[isim]=0;
-  });
+  tahminler.forEach(r=>{const isim=getCol(r,'isim soyisim');if(isim)skorlar[isim]=0;});
 
-  const kazananlarMap={};
-  katKeys.forEach(k=>{
-    const tahCol=KAT_MAP[k];
-    const sonRow=findRow(sonuclar,'kategori',k)||{};
-    const gerceklesen=normalize(getCol(sonRow,'gerceklesen_kisi'));
-    kazananlarMap[k]=[];
-    if(!gerceklesen) return;
+  const kazMap={};
+  KAT_KEYS.forEach(k=>{
+    const sr=findRow(sonuclar,'kategori',k)||{};
+    const grc=getCol(sr,'gerceklesen_kisi');
+    kazMap[k]=[];
+    if(!grc)return;
     tahminler.forEach(r=>{
-      const isim=getIsim(r);
-      const tah=getTahminCol(r,k).trim();
-      if(nameMatch(tah, gerceklesen)){
-        kazananlarMap[k].push(isim);
-        if(skorlar[isim]!==undefined) skorlar[isim]++;
-      }
+      const isim=getCol(r,'isim soyisim');
+      const tah=getCol(r,KAT_TAH[k]);
+      if(nameMatch(tah,grc)){kazMap[k].push(isim);if(skorlar[isim]!==undefined)skorlar[isim]++;}
     });
   });
 
   const sorted=Object.entries(skorlar).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  const tcRow=findRow(sonuclar,'kategori','En Yuksek Ciro')||{};
+  const tcVal=getCol(tcRow,'toplam_ciro')||getCol(tcRow,'ciro')||'';
+  const tcKisi=getCol(tcRow,'gerceklesen_kisi')||'';
 
-  const topCiroRow=findRow(sonuclar,'kategori','En Yuksek Ciro')||{};
-  const topCiroVal=getCol(topCiroRow,'toplam_ciro')||getCol(topCiroRow,'ciro')||'';
-  const topCiroKisi=getCol(topCiroRow,'gerceklesen_kisi')||'';
+  let h='<div class="summary-row">'
+    +'<div class="stat-card"><div class="stat-label">Toplam Bahis</div><div class="stat-value">6</div><div class="stat-sub">kategori</div></div>'
+    +'<div class="stat-card"><div class="stat-label">Sonuclanan</div><div class="stat-value accent">'+snc+'</div><div class="stat-sub">/ 6 kategori</div></div>'
+    +'<div class="stat-card"><div class="stat-label">Lider</div><div class="stat-value" style="font-size:15px;padding-top:3px;">'+(sorted[0]?.[0]?.split(' ')[0]||'—')+'</div><div class="stat-sub">'+(sorted[0]?.[1]||0)+' dogru tahmin</div></div>'
+    +'<div class="stat-card"><div class="stat-label">En Yuksek Ciro</div><div class="stat-value accent" style="font-size:17px;">'+(tcVal?fmt(tcVal):'—')+'</div><div class="stat-sub">'+(tcKisi||'bekleniyor')+'</div></div>'
+    +'</div>';
 
-  let html=`<div class="summary-row">
-    <div class="stat-card"><div class="stat-label">Toplam Bahis</div><div class="stat-value">6</div><div class="stat-sub">kategori</div></div>
-    <div class="stat-card"><div class="stat-label">Sonuclanan</div><div class="stat-value accent">${sonuclananSayisi}</div><div class="stat-sub">/ 6 kategori</div></div>
-    <div class="stat-card"><div class="stat-label">Lider</div><div class="stat-value" style="font-size:15px;padding-top:3px;">${sorted[0]?.[0]?.split(' ')[0]||'—'}</div><div class="stat-sub">${sorted[0]?.[1]||0} dogru tahmin</div></div>
-    <div class="stat-card"><div class="stat-label">En Yuksek Ciro</div><div class="stat-value accent" style="font-size:17px;">${topCiroVal?fmt(topCiroVal):'—'}</div><div class="stat-sub">${topCiroKisi||'bekleniyor'}</div></div>
-  </div>`;
+  h+='<div class="section-title">Bahis Kategorileri</div><div class="bets-grid">';
 
-  html+=`<div class="section-title">Bahis Kategorileri</div><div class="bets-grid">`;
+  KAT_KEYS.forEach(k=>{
+    const sr=findRow(sonuclar,'kategori',k)||{};
+    const grc=getCol(sr,'gerceklesen_kisi');
+    const done=grc!=='';
+    const parts=[];
+    const tarih=getCol(sr,'tarih'); if(tarih)parts.push(tarih);
+    const saat=getCol(sr,'saat'); if(saat)parts.push(saat);
+    const firma=getCol(sr,'firma_adi'); if(firma)parts.push(firma);
+    const ciro=getCol(sr,'ciro');
+    const exVal=EXTRA_COL[k]?getCol(sr,EXTRA_COL[k]):'';
+    if(ciro)parts.push(fmt(ciro));
+    else if(exVal&&(k==='En Yuksek Ciro'||k==='En Yuksek Satis'))parts.push(fmt(exVal));
+    else if(exVal&&k==='En Fazla Randevu')parts.push(exVal+' randevu');
+    else if(exVal&&k==='Satisa Donen Randevu')parts.push(exVal);
 
-  katKeys.forEach(k=>{
-    const sonRow=findRow(sonuclar,'kategori',k)||{};
-    const gerceklesen=getCol(sonRow,'gerceklesen_kisi').trim();
-    const done=gerceklesen!='';
-    const tarih=getCol(sonRow,'tarih');
-    const saat=getCol(sonRow,'saat');
-    const firma=getCol(sonRow,'firma_adi');
-    const ciro=getCol(sonRow,'ciro');
-    const extraCol=EXTRA_COL[k];
-    const extraVal=extraCol?getCol(sonRow,extraCol):'';
+    const winners=kazMap[k]||[];
+    let wHtml=done&&winners.length>0
+      ?winners.map((w,i)=>'<div class="winner-row"><span class="winner-num">'+(i+1)+'.</span><span class="winner-dot"></span>'+w+'</div>').join('')
+      :done?'<div class="pending-name">Kimse bilmedi</div>'
+      :'<div class="pending-name">Henuz belli degil</div>';
 
-    let detailParts=[];
-    if(tarih) detailParts.push(tarih);
-    if(saat) detailParts.push(saat);
-    if(firma) detailParts.push(firma);
-    if(ciro) detailParts.push(fmt(ciro));
-    else if(extraVal&&(k==='En Yuksek Ciro'||k==='En Yuksek Satis')) detailParts.push(fmt(extraVal));
-    else if(extraVal&&k==='En Fazla Randevu') detailParts.push(extraVal+' randevu');
-    else if(extraVal&&k==='Satisa Donen Randevu') detailParts.push(extraVal);
-
-    const winners=kazananlarMap[k]||[];
-    let winnersHtml='';
-    if(done&&winners.length>0){
-      winnersHtml=winners.map((w,i)=>`<div class="winner-row"><span class="winner-num">${i+1}.</span><span class="winner-dot"></span>${w}</div>`).join('');
-    } else if(done){
-      winnersHtml=`<div class="pending-name">Kimse bilmedi</div>`;
-    } else {
-      winnersHtml=`<div class="pending-name">Henuz belli degil</div>`;
+    let lHtml='';
+    if(!done&&exVal){
+      if(k==='En Fazla Randevu')lHtml='<div class="current-detail">'+exVal+' randevu</div>';
+      else if(k==='Satisa Donen Randevu')lHtml='<div class="current-detail">'+exVal+'</div>';
+      else lHtml='<div class="current-detail">'+fmt(exVal)+'</div>';
     }
 
-    let leaderHtml='';
-    if(!done&&extraVal){
-      if(k==='En Fazla Randevu') leaderHtml=`<div class="current-detail">${extraVal} randevu</div>`;
-      else if(k==='Satisa Donen Randevu') leaderHtml=`<div class="current-detail">${extraVal}</div>`;
-      else leaderHtml=`<div class="current-detail">${fmt(extraVal)}</div>`;
-    }
-
-    html+=`<div class="bet-card ${done?'done':''}">
-      <div class="bet-card-header">
-        <span class="bet-cat">${KAT_LABEL[k]}</span>
-        <span class="pill ${done?'pill-done':'pill-open'}">${done?'Sonuclandi':'Devam Ediyor'}</span>
-      </div>
-      <div class="bet-section">
-        <div class="bet-section-label">${done?'Gerceklesen':'Suanki Lider'}</div>
-        ${done
-          ?`<div class="result-person">${gerceklesen}</div><div class="result-detail">${detailParts.join(' · ')}</div>`
-          :`<div class="current-leader">${gerceklesen||'—'}</div>${leaderHtml}`
-        }
-      </div>
-      <div class="bet-section">
-        <div class="bet-section-label">Kazananlar</div>
-        <div class="winners-list">${winnersHtml}</div>
-      </div>
-    </div>`;
+    h+='<div class="bet-card '+(done?'done':'')+'"><div class="bet-card-header"><span class="bet-cat">'+KAT_LABEL[k]+'</span><span class="pill '+(done?'pill-done':'pill-open')+'">'+(done?'Sonuclandi':'Devam Ediyor')+'</span></div>'
+      +'<div class="bet-section"><div class="bet-section-label">'+(done?'Gerceklesen':'Suanki Lider')+'</div>'
+      +(done?'<div class="result-person">'+grc+'</div><div class="result-detail">'+parts.join(' · ')+'</div>':'<div class="current-leader">'+(grc||'—')+'</div>'+lHtml)
+      +'</div><div class="bet-section"><div class="bet-section-label">Kazananlar</div><div class="winners-list">'+wHtml+'</div></div></div>';
   });
-  html+=`</div>`;
+  h+='</div>';
 
-  html+=`<div class="section-title">Siralama</div><div class="bets-table-wrap"><table>
-    <thead><tr><th>Siralama</th><th>Isim Soyisim</th><th>Basarili Tahmin</th><th>Devam Eden</th></tr></thead>
-    <tbody>`;
-
-  const devamSayisi=katKeys.filter(k=>{
-    const sonRow=sonuclar.find(r=>r['kategori']===k);
-    return !(sonRow?.['gerceklesen_kisi']||'').trim();
-  }).length;
-
+  h+='<div class="section-title">Siralama</div><div class="bets-table-wrap"><table><thead><tr><th>Siralama</th><th>Isim Soyisim</th><th>Basarili Tahmin</th><th>Devam Eden</th></tr></thead><tbody>';
+  const devam=KAT_KEYS.filter(k=>!getCol(findRow(sonuclar,'kategori',k)||{},'gerceklesen_kisi')).length;
   sorted.forEach(([isim,puan],i)=>{
     const rank=i+1;
-    let cupColor,rankLabel;
-    if(rank===1){cupColor=CUP_GOLD;rankLabel=`<span class="rank-1st">1.</span>`;}
-    else if(rank===2){cupColor=CUP_SILVER;rankLabel=`<span class="rank-num">2.</span>`;}
-    else if(rank===3){cupColor=CUP_BRONZE;rankLabel=`<span class="rank-num">3.</span>`;}
-    else{cupColor=CUP_OTHER;rankLabel=`<span class="rank-num">${rank}.</span>`;}
-
-    const cupsHtml=puan===0
-      ?`<span style="font-size:12px;color:#ddd;">—</span>`
-      :Array(puan).fill(cupSVG(cupColor)).join('');
-
-    const avClass=rank<=3?'av-top':'av-gray';
-    html+=`<tr>
-      <td>${rankLabel}</td>
-      <td><div class="name-cell"><span class="avatar ${avClass}">${initials(isim)}</span>${isim}</div></td>
-      <td><div class="cups">${cupsHtml}</div></td>
-      <td><span class="devam">${devamSayisi} bekleniyor</span></td>
-    </tr>`;
+    let cc,rl;
+    if(rank===1){cc=CUP_GOLD;rl='<span class="rank-1st">1.</span>';}
+    else if(rank===2){cc=CUP_SILVER;rl='<span class="rank-num">2.</span>';}
+    else if(rank===3){cc=CUP_BRONZE;rl='<span class="rank-num">3.</span>';}
+    else{cc=CUP_OTHER;rl='<span class="rank-num">'+rank+'.</span>';}
+    const cups=puan===0?'<span style="font-size:12px;color:#ddd;">—</span>':Array(puan).fill(cupSVG(cc)).join('');
+    h+='<tr><td>'+rl+'</td><td><div class="name-cell"><span class="avatar '+(rank<=3?'av-top':'av-gray')+'">'+initials(isim)+'</span>'+isim+'</div></td><td><div class="cups">'+cups+'</div></td><td><span class="devam">'+devam+' bekleniyor</span></td></tr>';
   });
-
-  html+=`</tbody></table></div><div class="footer-note">Veriler Google Sheets'ten cekilmektedir</div>`;
-  document.getElementById('ozet-content').innerHTML=html;
+  h+='</tbody></table></div><div class="footer-note">Veriler Google Sheets\'ten cekilmektedir</div>';
+  document.getElementById('ozet-content').innerHTML=h;
 }
 
-function renderTahminler(sonuclar, tahminler){
-  const katKeys=Object.keys(KAT_MAP);
-  const isimler=tahminler.map(r=>getIsim(r)).filter(Boolean);
-
-  let html=`<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>`;
-  isimler.forEach(a=>{
-    const kisa=a.split(' ').map((p,i)=>i===0?p:p[0]+'.').join(' ');
-    html+=`<th>${kisa}</th>`;
-  });
-  html+=`</tr></thead><tbody>`;
-
-  katKeys.forEach(k=>{
-    const tahCol=KAT_MAP[k];
-    const sonRow=findRow(sonuclar,'kategori',k)||{};
-    const gerceklesen=normalize(getCol(sonRow,'gerceklesen_kisi'));
-    html+=`<tr><td>${KAT_LABEL[k]}</td>`;
+function renderTahminler(sonuclar,tahminler){
+  const isimler=tahminler.map(r=>getCol(r,'isim soyisim')).filter(Boolean);
+  let h='<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>';
+  isimler.forEach(a=>{h+='<th>'+a.split(' ').map((p,i)=>i===0?p:p[0]+'.').join(' ')+'</th>';});
+  h+='</tr></thead><tbody>';
+  KAT_KEYS.forEach(k=>{
+    const sr=findRow(sonuclar,'kategori',k)||{};
+    const grc=getCol(sr,'gerceklesen_kisi');
+    h+='<tr><td>'+KAT_LABEL[k]+'</td>';
     isimler.forEach(a=>{
-      const row=tahminler.find(r=>getIsim(r)===a)||{};
-      const tah=getTahminCol(row,k).trim();
-      const isWin=gerceklesen&&nameMatch(tah,getCol(sonRow,'gerceklesen_kisi'));
-      html+=`<td class="${isWin?'cell-win':'cell-open'}">${tah||'—'}</td>`;
+      const row=tahminler.find(r=>getCol(r,'isim soyisim')===a)||{};
+      const tah=getCol(row,KAT_TAH[k]);
+      h+='<td class="'+(grc&&nameMatch(tah,grc)?'cell-win':'cell-open')+'">'+(tah||'—')+'</td>';
     });
-    html+=`</tr>`;
+    h+='</tr>';
   });
-
-  html+=`</tbody></table></div><div class="footer-note">Yesil: dogru tahmin · Gri: devam ediyor / yanlis</div>`;
-  document.getElementById('tahminler-content').innerHTML=html;
+  h+='</tbody></table></div><div class="footer-note">Yesil: dogru tahmin · Gri: devam ediyor / yanlis</div>';
+  document.getElementById('tahminler-content').innerHTML=h;
 }
 
 function switchTab(id,el){

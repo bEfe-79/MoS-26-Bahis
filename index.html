@@ -147,8 +147,15 @@ function cleanStr(s){
 
 function parseCSV(text){
   const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split('\n');
-  const headers = lines[0].split(',').map(h=>cleanStr(h));
-  return lines.slice(1).map(line=>{
+  let headerIdx=0;
+  for(let i=0;i<Math.min(3,lines.length);i++){
+    const cells=lines[i].split(',').map(h=>cleanStr(h).toLowerCase());
+    if(cells.includes('kategori')||cells.includes('isim soyisim')||cells.some(c=>c.includes('isim'))){
+      headerIdx=i; break;
+    }
+  }
+  const headers = lines[headerIdx].split(',').map(h=>cleanStr(h));
+  return lines.slice(headerIdx+1).map(line=>{
     const vals=[];
     let cur='', inQ=false;
     for(let i=0;i<line.length;i++){
@@ -176,9 +183,16 @@ function normalize(s){
     .replace(/[Ää]/g,'a');
 }
 
+function nameMatch(tahmin, gerceklesen){
+  if(!tahmin||!gerceklesen) return false;
+  const t=normalize(tahmin);
+  const g=normalize(gerceklesen);
+  return t===g || t.includes(g) || g.includes(t);
+}
+
 function findRow(rows, colName, val){
   const nVal=normalize(val);
-  return rows.find(r=>normalize(r[colName])===nVal)||null;
+  return rows.find(r=>normalize(getCol(r,colName))===nVal)||null;
 }
 
 function getCol(obj, colName){
@@ -237,6 +251,9 @@ async function loadData(){
     ]);
     const sonuclar=parseCSV(sonuclarText);
     const tahminler=parseCSV(tahminlerText);
+    console.log('SONUCLAR keys:', sonuclar[0]?Object.keys(sonuclar[0]):[]);
+    console.log('SONUCLAR rows:', sonuclar.map(r=>getCol(r,'kategori')+'|'+getCol(r,'gerceklesen_kisi')));
+    console.log('TAHMINLER keys:', tahminler[0]?Object.keys(tahminler[0]):[]);
     renderOzet(sonuclar, tahminler);
     renderTahminler(sonuclar, tahminler);
 
@@ -280,8 +297,8 @@ function renderOzet(sonuclar, tahminler){
     if(!gerceklesen) return;
     tahminler.forEach(r=>{
       const isim=getCol(r,'isim soyisim').trim();
-      const tah=normalize(getCol(r,tahCol));
-      if(tah===gerceklesen){
+      const tah=getCol(r,tahCol).trim();
+      if(nameMatch(tah, gerceklesen)){
         kazananlarMap[k].push(isim);
         if(skorlar[isim]!==undefined) skorlar[isim]++;
       }
@@ -413,7 +430,7 @@ function renderTahminler(sonuclar, tahminler){
     isimler.forEach(a=>{
       const row=tahminler.find(r=>getCol(r,'isim soyisim').trim()===a)||{};
       const tah=getCol(row,tahCol).trim();
-      const isWin=gerceklesen&&normalize(tah)===gerceklesen;
+      const isWin=gerceklesen&&nameMatch(tah,getCol(sonRow,'gerceklesen_kisi'));
       html+=`<td class="${isWin?'cell-win':'cell-open'}">${tah||'—'}</td>`;
     });
     html+=`</tr>`;

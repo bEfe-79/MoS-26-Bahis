@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoS'26-01 Basari Tahminleri</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9f8f7;min-height:100vh;padding:24px;color:#111;}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.topbar-title{font-size:19px;font-weight:500;color:#111;letter-spacing:-0.3px;}
+.topbar-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.topbar-right-row{display:flex;align-items:center;gap:8px;}
+.badge-live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#db0962;background:#fce8f1;padding:5px 12px;border-radius:20px;}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:#db0962;animation:pulse 1.4s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.refresh-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#888;background:#fff;border:0.5px solid #ddd;padding:5px 12px;border-radius:20px;cursor:pointer;transition:background .15s;}
+.refresh-btn:hover{background:#f5f5f3;}
+.refresh-btn:disabled{opacity:.5;cursor:not-allowed;}
+.refresh-icon{width:13px;height:13px;}
+.refresh-icon.spin{animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.update-info{font-size:11px;color:#bbb;text-align:right;}
+
+.tabs{display:flex;border-bottom:0.5px solid #e0ded9;margin-bottom:20px;}
+.tab{font-size:13px;font-weight:500;color:#aaa;padding:8px 18px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color .15s,border-color .15s;background:none;border-top:none;border-left:none;border-right:none;}
+.tab.active{color:#db0962;border-bottom:2px solid #db0962;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+.summary-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+@media(max-width:600px){.summary-row{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.stat-card{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;padding:14px 16px;}
+.stat-label{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.stat-value{font-size:21px;font-weight:500;color:#111;}
+.stat-value.accent{color:#db0962;}
+.stat-sub{font-size:12px;color:#bbb;margin-top:3px;}
+
+.section-title{font-size:11px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.7px;margin:4px 0 12px;}
+.bets-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px;}
+@media(max-width:600px){.bets-grid{grid-template-columns:1fr;}}
+.bet-card{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:hidden;}
+.bet-card.done{border-left:3px solid #db0962;border-radius:0 12px 12px 0;}
+.bet-card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 9px;border-bottom:0.5px solid #f0eeeb;}
+.bet-cat{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.4px;}
+.pill{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;}
+.pill-done{background:#fce8f1;color:#db0962;}
+.pill-open{background:#f0eeeb;color:#aaa;}
+.bet-section{padding:10px 14px;border-bottom:0.5px solid #f7f6f4;}
+.bet-section:last-child{border-bottom:none;}
+.bet-section-label{font-size:10px;color:#ccc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.result-person{font-size:13px;font-weight:500;color:#db0962;}
+.result-detail{font-size:11px;color:#aaa;margin-top:1px;}
+.winners-list{display:flex;flex-direction:column;gap:3px;}
+.winner-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#555;}
+.winner-num{font-size:10px;color:#ccc;width:12px;}
+.winner-dot{width:5px;height:5px;border-radius:50%;background:#db0962;flex-shrink:0;}
+.pending-name{font-size:12px;color:#aaa;font-style:italic;}
+.current-leader{font-size:13px;font-weight:500;color:#555;}
+.current-detail{font-size:11px;color:#aaa;margin-top:1px;}
+
+.bets-table-wrap{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:hidden;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{background:#fafaf9;}
+thead th{padding:9px 14px;text-align:left;font-size:11px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid #f0eeeb;}
+tbody tr{border-bottom:0.5px solid #f7f6f4;}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:10px 14px;color:#333;vertical-align:middle;}
+.name-cell{display:flex;align-items:center;}
+.avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;margin-right:8px;flex-shrink:0;}
+.av-top{background:#fce8f1;color:#db0962;}
+.av-gray{background:#f0eeeb;color:#aaa;}
+.rank-num{font-size:13px;color:#bbb;}
+.rank-1st{color:#b8860b;font-weight:500;}
+.cups{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.devam{font-size:12px;color:#bbb;}
+
+.pred-table-wrap{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:auto;margin-bottom:20px;}
+.pred-table{width:100%;border-collapse:collapse;font-size:12px;min-width:580px;}
+.pred-table thead th{padding:9px 12px;text-align:left;font-size:10px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid #f0eeeb;background:#fafaf9;white-space:nowrap;}
+.pred-table tbody td{padding:9px 12px;border-bottom:0.5px solid #f7f6f4;vertical-align:top;color:#444;line-height:1.4;}
+.pred-table tbody tr:last-child td{border-bottom:none;}
+.pred-table tbody td:first-child{font-weight:500;color:#111;font-size:11px;background:#fafaf9;border-right:0.5px solid #f0eeeb;white-space:nowrap;}
+.cell-win{color:#db0962;font-weight:500;}
+.cell-open{color:#aaa;}
+.loading-state{padding:40px;text-align:center;color:#bbb;font-size:13px;}
+.error-state{padding:20px;text-align:center;color:#a32d2d;font-size:12px;background:#fcebeb;border-radius:8px;margin:12px 0;line-height:1.7;}
+.footer-note{font-size:12px;color:#ccc;text-align:center;margin-top:8px;padding-bottom:8px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">MoS'26-01 Basari Tahminleri</div>
+  <div class="topbar-right">
+    <div class="topbar-right-row">
+      <button class="refresh-btn" id="refresh-btn" onclick="loadData()">
+        <svg class="refresh-icon" id="refresh-icon" viewBox="0 0 13 13" fill="none">
+          <path d="M11 2.5A5.5 5.5 0 1 0 12 6.5" stroke="#888" stroke-width="1.3" stroke-linecap="round"/>
+          <polyline points="9,0.5 12,2.5 9,4.5" fill="none" stroke="#888" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Guncelle
+      </button>
+      <div class="badge-live"><span class="badge-dot"></span>Canli Takip</div>
+    </div>
+    <div class="update-info" id="update-info">—</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('ozet',this)">Genel Ozet</button>
+  <button class="tab" onclick="switchTab('tahminler',this)">Katilimci Tahminleri</button>
+</div>
+
+<div id="tab-ozet" class="tab-content active">
+  <div id="ozet-content"><div class="loading-state">Veriler yukleniyor...</div></div>
+</div>
+<div id="tab-tahminler" class="tab-content">
+  <div id="tahminler-content"><div class="loading-state">Veriler yukleniyor...</div></div>
+</div>
+
+<script>
+const SHEET_ID = '1NHM7qLI3EyrgjYTFCXMbSEolOBLMfGJ32nn86e5r-LU';
+const CUP_GOLD='#b8860b', CUP_SILVER='#8a8a8a', CUP_BRONZE='#a0522d', CUP_OTHER='#db0962';
+
+function cupSVG(color){
+  return `<svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;display:inline-block;vertical-align:middle;">
+    <path d="M5 2h8v6a4 4 0 0 1-8 0V2z" fill="${color}" opacity=".9"/>
+    <path d="M3 2h2v3a2 2 0 0 1-2-2V2z" fill="${color}" opacity=".5"/>
+    <path d="M13 2h2v1a2 2 0 0 1-2 2V2z" fill="${color}" opacity=".5"/>
+    <rect x="7.5" y="11" width="3" height="3" fill="${color}" opacity=".7"/>
+    <rect x="5.5" y="14" width="7" height="1.5" rx="0.5" fill="${color}" opacity=".8"/>
+  </svg>`;
+}
+
+function fetchCSV(sheet){
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`;
+  return fetch(url).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.text();
+  });
+}
+
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const vals=[];
+    let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){vals.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    vals.push(cur.trim());
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim());
+    return obj;
+  }).filter(r=>Object.values(r).some(v=>v!==''));
+}
+
+const KAT_MAP={
+  'Ilk Satis':           'İlk Satış',
+  'Ilk Randevu':         'İlk Randevu',
+  'En Yuksek Ciro':      'İlk hafta En Yüksek Ciro',
+  'En Yuksek Satis':     'İlk Hafta En Yüksek Satış',
+  'En Fazla Randevu':    'İlk Hafta En Fazla Randevu',
+  'Satisa Donen Randevu':'İlk Hafta En Fazla Satışa Dönen Randevu'
+};
+
+const KAT_LABEL={
+  'Ilk Satis':           'Ilk Satis',
+  'Ilk Randevu':         'Ilk Randevu',
+  'En Yuksek Ciro':      'Ilk Hafta En Yuksek Ciro',
+  'En Yuksek Satis':     'Ilk Hafta En Yuksek Satis',
+  'En Fazla Randevu':    'Ilk Hafta En Fazla Randevu',
+  'Satisa Donen Randevu':'En Fazla Satisa Donen Randevu'
+};
+
+const EXTRA_COL={
+  'En Yuksek Ciro':      'toplam_ciro',
+  'En Yuksek Satis':     'toplam_satis',
+  'En Fazla Randevu':    'toplam_randevu',
+  'Satisa Donen Randevu':'toplam_satisa_donen'
+};
+
+function fmt(n){
+  if(!n||n==='') return '';
+  const num=parseFloat(String(n).replace(/[^0-9.]/g,''));
+  if(isNaN(num)) return n;
+  return '₺'+Math.round(num).toLocaleString('tr-TR');
+}
+
+function initials(name){
+  const p=name.trim().split(' ');
+  return (p[0]?.[0]||'')+(p[1]?.[0]||'');
+}
+
+async function loadData(){
+  const btn=document.getElementById('refresh-btn');
+  const icon=document.getElementById('refresh-icon');
+  btn.disabled=true;
+  icon.classList.add('spin');
+
+  try{
+    const [sonuclarText, tahminlerText]=await Promise.all([
+      fetchCSV('Sonuclar'),
+      fetchCSV('Tahminler')
+    ]);
+    const sonuclar=parseCSV(sonuclarText);
+    const tahminler=parseCSV(tahminlerText);
+    renderOzet(sonuclar, tahminler);
+    renderTahminler(sonuclar, tahminler);
+
+    const sonRow=sonuclar.find(r=>r['guncelleme_tarihi']&&r['guncelleme_tarihi']!='');
+    if(sonRow){
+      const gt=sonRow['guncelleme_tarihi']||'';
+      const gs=sonRow['guncelleme_saati']||'';
+      document.getElementById('update-info').textContent=gt ? `Son guncelleme: ${gt}${gs?' '+gs:''}` : '—';
+    } else {
+      document.getElementById('update-info').textContent='—';
+    }
+  } catch(e){
+    document.getElementById('ozet-content').innerHTML=`<div class="error-state">
+      Veri yuklenemedi: ${e.message}<br>
+      Sheets'in "Web'de herkese acik" ayarinda oldugunu kontrol edin.<br>
+      <small style="color:#bbb;">SHEET_ID: ${SHEET_ID}</small>
+    </div>`;
+  } finally{
+    btn.disabled=false;
+    icon.classList.remove('spin');
+  }
+}
+
+function renderOzet(sonuclar, tahminler){
+  const katKeys=Object.keys(KAT_MAP);
+  let sonuclananSayisi=0;
+  sonuclar.forEach(r=>{if((r['gerceklesen_kisi']||'').trim()!='') sonuclananSayisi++;});
+
+  const skorlar={};
+  tahminler.forEach(r=>{
+    const isim=(r['İsim Soyisim']||'').trim();
+    if(isim) skorlar[isim]=0;
+  });
+
+  const kazananlarMap={};
+  katKeys.forEach(k=>{
+    const tahCol=KAT_MAP[k];
+    const sonRow=sonuclar.find(r=>r['kategori']===k)||{};
+    const gerceklesen=(sonRow['gerceklesen_kisi']||'').trim().toLowerCase();
+    kazananlarMap[k]=[];
+    if(!gerceklesen) return;
+    tahminler.forEach(r=>{
+      const isim=(r['İsim Soyisim']||'').trim();
+      const tah=(r[tahCol]||'').trim().toLowerCase();
+      if(tah===gerceklesen){
+        kazananlarMap[k].push((r['İsim Soyisim']||'').trim());
+        if(skorlar[isim]!==undefined) skorlar[isim]++;
+      }
+    });
+  });
+
+  const sorted=Object.entries(skorlar).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+
+  const topCiro=sonuclar.find(r=>r['kategori']==='En Yuksek Ciro')||{};
+  const topCiroVal=topCiro['toplam_ciro']||topCiro['ciro']||'';
+  const topCiroKisi=topCiro['gerceklesen_kisi']||'';
+
+  let html=`<div class="summary-row">
+    <div class="stat-card"><div class="stat-label">Toplam Bahis</div><div class="stat-value">6</div><div class="stat-sub">kategori</div></div>
+    <div class="stat-card"><div class="stat-label">Sonuclanan</div><div class="stat-value accent">${sonuclananSayisi}</div><div class="stat-sub">/ 6 kategori</div></div>
+    <div class="stat-card"><div class="stat-label">Lider</div><div class="stat-value" style="font-size:15px;padding-top:3px;">${sorted[0]?.[0]?.split(' ')[0]||'—'}</div><div class="stat-sub">${sorted[0]?.[1]||0} dogru tahmin</div></div>
+    <div class="stat-card"><div class="stat-label">En Yuksek Ciro</div><div class="stat-value accent" style="font-size:17px;">${topCiroVal?fmt(topCiroVal):'—'}</div><div class="stat-sub">${topCiroKisi||'bekleniyor'}</div></div>
+  </div>`;
+
+  html+=`<div class="section-title">Bahis Kategorileri</div><div class="bets-grid">`;
+
+  katKeys.forEach(k=>{
+    const sonRow=sonuclar.find(r=>r['kategori']===k)||{};
+    const gerceklesen=(sonRow['gerceklesen_kisi']||'').trim();
+    const done=gerceklesen!='';
+    const tarih=sonRow['tarih']||'';
+    const saat=sonRow['saat']||'';
+    const firma=sonRow['firma_adi']||'';
+    const ciro=sonRow['ciro']||'';
+    const extraCol=EXTRA_COL[k];
+    const extraVal=extraCol?(sonRow[extraCol]||''):'';
+
+    let detailParts=[];
+    if(tarih) detailParts.push(tarih);
+    if(saat) detailParts.push(saat);
+    if(firma) detailParts.push(firma);
+    if(ciro) detailParts.push(fmt(ciro));
+    else if(extraVal&&(k==='En Yuksek Ciro'||k==='En Yuksek Satis')) detailParts.push(fmt(extraVal));
+    else if(extraVal&&k==='En Fazla Randevu') detailParts.push(extraVal+' randevu');
+    else if(extraVal&&k==='Satisa Donen Randevu') detailParts.push(extraVal);
+
+    const winners=kazananlarMap[k]||[];
+    let winnersHtml='';
+    if(done&&winners.length>0){
+      winnersHtml=winners.map((w,i)=>`<div class="winner-row"><span class="winner-num">${i+1}.</span><span class="winner-dot"></span>${w}</div>`).join('');
+    } else if(done){
+      winnersHtml=`<div class="pending-name">Kimse bilmedi</div>`;
+    } else {
+      winnersHtml=`<div class="pending-name">Henuz belli degil</div>`;
+    }
+
+    let leaderHtml='';
+    if(!done&&extraVal){
+      if(k==='En Fazla Randevu') leaderHtml=`<div class="current-detail">${extraVal} randevu</div>`;
+      else if(k==='Satisa Donen Randevu') leaderHtml=`<div class="current-detail">${extraVal}</div>`;
+      else leaderHtml=`<div class="current-detail">${fmt(extraVal)}</div>`;
+    }
+
+    html+=`<div class="bet-card ${done?'done':''}">
+      <div class="bet-card-header">
+        <span class="bet-cat">${KAT_LABEL[k]}</span>
+        <span class="pill ${done?'pill-done':'pill-open'}">${done?'Sonuclandi':'Devam Ediyor'}</span>
+      </div>
+      <div class="bet-section">
+        <div class="bet-section-label">${done?'Gerceklesen':'Suanki Lider'}</div>
+        ${done
+          ?`<div class="result-person">${gerceklesen}</div><div class="result-detail">${detailParts.join(' · ')}</div>`
+          :`<div class="current-leader">${gerceklesen||'—'}</div>${leaderHtml}`
+        }
+      </div>
+      <div class="bet-section">
+        <div class="bet-section-label">Kazananlar</div>
+        <div class="winners-list">${winnersHtml}</div>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  html+=`<div class="section-title">Siralama</div><div class="bets-table-wrap"><table>
+    <thead><tr><th>Siralama</th><th>Isim Soyisim</th><th>Basarili Tahmin</th><th>Devam Eden</th></tr></thead>
+    <tbody>`;
+
+  const devamSayisi=katKeys.filter(k=>{
+    const sonRow=sonuclar.find(r=>r['kategori']===k);
+    return !(sonRow?.['gerceklesen_kisi']||'').trim();
+  }).length;
+
+  sorted.forEach(([isim,puan],i)=>{
+    const rank=i+1;
+    let cupColor,rankLabel;
+    if(rank===1){cupColor=CUP_GOLD;rankLabel=`<span class="rank-1st">1.</span>`;}
+    else if(rank===2){cupColor=CUP_SILVER;rankLabel=`<span class="rank-num">2.</span>`;}
+    else if(rank===3){cupColor=CUP_BRONZE;rankLabel=`<span class="rank-num">3.</span>`;}
+    else{cupColor=CUP_OTHER;rankLabel=`<span class="rank-num">${rank}.</span>`;}
+
+    const cupsHtml=puan===0
+      ?`<span style="font-size:12px;color:#ddd;">—</span>`
+      :Array(puan).fill(cupSVG(cupColor)).join('');
+
+    const avClass=rank<=3?'av-top':'av-gray';
+    html+=`<tr>
+      <td>${rankLabel}</td>
+      <td><div class="name-cell"><span class="avatar ${avClass}">${initials(isim)}</span>${isim}</div></td>
+      <td><div class="cups">${cupsHtml}</div></td>
+      <td><span class="devam">${devamSayisi} bekleniyor</span></td>
+    </tr>`;
+  });
+
+  html+=`</tbody></table></div><div class="footer-note">Veriler Google Sheets'ten cekilmektedir</div>`;
+  document.getElementById('ozet-content').innerHTML=html;
+}
+
+function renderTahminler(sonuclar, tahminler){
+  const katKeys=Object.keys(KAT_MAP);
+  const isimler=tahminler.map(r=>(r['İsim Soyisim']||'').trim()).filter(Boolean);
+
+  let html=`<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>`;
+  isimler.forEach(a=>{
+    const kisa=a.split(' ').map((p,i)=>i===0?p:p[0]+'.').join(' ');
+    html+=`<th>${kisa}</th>`;
+  });
+  html+=`</tr></thead><tbody>`;
+
+  katKeys.forEach(k=>{
+    const tahCol=KAT_MAP[k];
+    const sonRow=sonuclar.find(r=>r['kategori']===k)||{};
+    const gerceklesen=(sonRow['gerceklesen_kisi']||'').trim().toLowerCase();
+    html+=`<tr><td>${KAT_LABEL[k]}</td>`;
+    isimler.forEach(a=>{
+      const row=tahminler.find(r=>(r['İsim Soyisim']||'').trim()===a)||{};
+      const tah=(row[tahCol]||'').trim();
+      const isWin=gerceklesen&&tah.toLowerCase()===gerceklesen;
+      html+=`<td class="${isWin?'cell-win':'cell-open'}">${tah||'—'}</td>`;
+    });
+    html+=`</tr>`;
+  });
+
+  html+=`</tbody></table></div><div class="footer-note">Yesil: dogru tahmin · Gri: devam ediyor / yanlis</div>`;
+  document.getElementById('tahminler-content').innerHTML=html;
+}
+
+function switchTab(id,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+loadData();
+</script>
+</body>
+</html>

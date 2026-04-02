@@ -133,7 +133,9 @@ function getCol(obj,col){
   if(!obj)return'';
   const t=norm(col);
   const k=Object.keys(obj).find(k=>norm(k)===t);
-  return k!=null?String(obj[k]==null?'':obj[k]).trim():'';
+  if(k!=null)return String(obj[k]==null?'':obj[k]).trim();
+  const k2=Object.keys(obj).find(k=>k.trim()===col.trim());
+  return k2!=null?String(obj[k2]==null?'':obj[k2]).trim():'';
 }
 
 function findRow(rows,col,val){
@@ -181,12 +183,12 @@ const KAT_LABEL={
 };
 
 const KAT_TAH={
-  'Ilk Satis':'Ilk Satis',
-  'Ilk Randevu':'Ilk Randevu',
-  'En Yuksek Ciro':'Ilk hafta En Yuksek Ciro',
-  'En Yuksek Satis':'Ilk Hafta En Yuksek Satis',
-  'En Fazla Randevu':'Ilk Hafta En Fazla Randevu',
-  'Satisa Donen Randevu':'Ilk Hafta En Fazla Satisa Donen Randevu'
+  'Ilk Satis':'\u0130lk Sat\u0131\u015f',
+  'Ilk Randevu':'\u0130lk Randevu',
+  'En Yuksek Ciro':'\u0130lk hafta En Y\u00fcksek Ciro',
+  'En Yuksek Satis':'\u0130lk Hafta En Y\u00fcksek Sat\u0131\u015f',
+  'En Fazla Randevu':'\u0130lk Hafta En Fazla Randevu',
+  'Satisa Donen Randevu':'\u0130lk Hafta En Fazla Sat\u0131\u015fa D\u00f6nen Randevu'
 };
 
 const EXTRA_COL={

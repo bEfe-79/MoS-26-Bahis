@@ -140,11 +140,22 @@ function fetchSheet(sheet){
     return r.text();
   }).then(text=>{
     const json = JSON.parse(text.replace(/^[^(]+\(|\);?$/g,''));
-    const cols = json.table.cols.map(c=>c.label||c.id);
+    const cols = json.table.cols.map(c=>(c.label||c.id||'').trim());
     const rows = (json.table.rows||[]).map(row=>{
       const obj={};
       cols.forEach((col,i)=>{
-        obj[col] = row.c[i]?.v!=null ? String(row.c[i].v) : '';
+        const cell = row.c ? row.c[i] : null;
+        let val = '';
+        if(cell && cell.v != null){
+          if(cell.f != null){
+            val = String(cell.f);
+          } else if(typeof cell.v === 'object'){
+            val = '';
+          } else {
+            val = String(cell.v);
+          }
+        }
+        if(col) obj[col] = val;
       });
       return obj;
     }).filter(r=>Object.values(r).some(v=>v!==''));

@@ -252,6 +252,16 @@ const KAT_MAP={
   'Satisa Donen Randevu':'İlk Hafta En Fazla Satışa Dönen Randevu'
 };
 
+function getTahminCol(row, katKey){
+  const tahCol = KAT_MAP[katKey];
+  const val = getCol(row, tahCol);
+  if(val) return val;
+  const keys = Object.keys(row);
+  const nTarget = normalize(tahCol);
+  const found = keys.find(k=>normalize(k)===nTarget);
+  return found ? String(row[found]||'').trim() : '';
+}
+
 const KAT_LABEL={
   'Ilk Satis':           'Ilk Satis',
   'Ilk Randevu':         'Ilk Randevu',
@@ -349,7 +359,7 @@ function renderOzet(sonuclar, tahminler){
     if(!gerceklesen) return;
     tahminler.forEach(r=>{
       const isim=getIsim(r);
-      const tah=getCol(r,tahCol).trim();
+      const tah=getTahminCol(r,k).trim();
       if(nameMatch(tah, gerceklesen)){
         kazananlarMap[k].push(isim);
         if(skorlar[isim]!==undefined) skorlar[isim]++;
@@ -481,7 +491,7 @@ function renderTahminler(sonuclar, tahminler){
     html+=`<tr><td>${KAT_LABEL[k]}</td>`;
     isimler.forEach(a=>{
       const row=tahminler.find(r=>getIsim(r)===a)||{};
-      const tah=getCol(row,tahCol).trim();
+      const tah=getTahminCol(row,k).trim();
       const isWin=gerceklesen&&nameMatch(tah,getCol(sonRow,'gerceklesen_kisi'));
       html+=`<td class="${isWin?'cell-win':'cell-open'}">${tah||'—'}</td>`;
     });

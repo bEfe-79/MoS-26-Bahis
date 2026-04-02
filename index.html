@@ -328,23 +328,28 @@ function renderTahminler(sonuclar,tahminler){
   let h='<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>';
   isimler.forEach(a=>{const p=a.trim().split(' ');const kisa=p[0]+(p[1]?' '+p[1][0]+'.':'');h+='<th>'+kisa+'</th>';});
   h+='</tr></thead><tbody>';
-  KAT_KEYS.forEach(k=>{
-    const sr=findRow(sonuclar,'kategori',k)||{};
-    const grc=getCol(sr,'gerceklesen_kisi');
-    h+='<tr><td>'+KAT_LABEL[k]+'</td>';
-    isimler.forEach(a=>{
-      const row=tahminler.find(r=>getIsimSoyisim(r)===a)||{};
-      const tah=getCol(row,KAT_TAH[k]);
-      const katSonuclandi=grc!=='';
-      let cls;
-      if(katSonuclandi && nameMatch(tah,grc)) cls='cell-win';
-      else if(katSonuclandi && tah!=='') cls='cell-wrong';
-      else cls='cell-open';
-      const tahParts=tah.split(' ');
-      const tahGoster=tahParts.length>1?tahParts[0]+' '+tahParts[1][0]+'.':tah;
-      h+='<td><span class="'+cls+'">'+(tahGoster||'—')+'</span></td>';
+  const cols=isimler.length+1;
+  const GRUPLAR=[['SAS',['Ilk Satis','En Yuksek Ciro','En Yuksek Satis']],['SAD',['Ilk Randevu','En Fazla Randevu','Satisa Donen Randevu']]];
+  GRUPLAR.forEach(([grupAdi,grupKeys])=>{
+    h+='<tr><td colspan="'+cols+'" style="background:#db0962;color:#fff;font-size:11px;font-weight:500;padding:5px 10px;letter-spacing:.5px;">'+grupAdi+'</td></tr>';
+    grupKeys.forEach(k=>{
+      const sr=findRow(sonuclar,'kategori',k)||{};
+      const grc=getCol(sr,'gerceklesen_kisi');
+      h+='<tr><td>'+KAT_LABEL[k]+'</td>';
+      isimler.forEach(a=>{
+        const row=tahminler.find(r=>getIsimSoyisim(r)===a)||{};
+        const tah=getCol(row,KAT_TAH[k]);
+        const katSonuclandi=grc!=='';
+        let cls;
+        if(katSonuclandi && nameMatch(tah,grc)) cls='cell-win';
+        else if(katSonuclandi && tah!=='') cls='cell-wrong';
+        else cls='cell-open';
+        const tahParts=tah.split(' ');
+        const tahGoster=tahParts.length>1?tahParts[0]+' '+tahParts[1][0]+'.':tah;
+        h+='<td><span class="'+cls+'">'+(tahGoster||'—')+'</span></td>';
+      });
+      h+='</tr>';
     });
-    h+='</tr>';
   });
   h+='</tbody></table></div><div class="footer-note">Yesil: dogru tahmin · Gri: devam ediyor / yanlis</div>';
   document.getElementById('tahminler-content').innerHTML=h;

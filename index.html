@@ -229,7 +229,11 @@ function getCol(obj, colName){
   return key!=null?(String(obj[key]||'')):'';
 }
 
-function fmtDate(s){
+function getIsim(row){
+  const keys = Object.keys(row);
+  const found = keys.find(k=>normalize(k)==='isim soyisim');
+  return found ? String(row[found]||'').trim() : '';
+}
   if(!s) return '';
   try{
     const d=new Date(s);
@@ -332,7 +336,7 @@ function renderOzet(sonuclar, tahminler){
 
   const skorlar={};
   tahminler.forEach(r=>{
-    const isim=getCol(r,'isim soyisim').trim();
+    const isim=getIsim(r);
     if(isim) skorlar[isim]=0;
   });
 
@@ -344,7 +348,7 @@ function renderOzet(sonuclar, tahminler){
     kazananlarMap[k]=[];
     if(!gerceklesen) return;
     tahminler.forEach(r=>{
-      const isim=getCol(r,'isim soyisim').trim();
+      const isim=getIsim(r);
       const tah=getCol(r,tahCol).trim();
       if(nameMatch(tah, gerceklesen)){
         kazananlarMap[k].push(isim);
@@ -461,7 +465,7 @@ function renderOzet(sonuclar, tahminler){
 
 function renderTahminler(sonuclar, tahminler){
   const katKeys=Object.keys(KAT_MAP);
-  const isimler=tahminler.map(r=>getCol(r,'isim soyisim').trim()).filter(Boolean);
+  const isimler=tahminler.map(r=>getIsim(r)).filter(Boolean);
 
   let html=`<div class="section-title">Katilimci Tahminleri — Tum Kategoriler</div><div class="pred-table-wrap"><table class="pred-table"><thead><tr><th>Kategori</th>`;
   isimler.forEach(a=>{
@@ -476,7 +480,7 @@ function renderTahminler(sonuclar, tahminler){
     const gerceklesen=normalize(getCol(sonRow,'gerceklesen_kisi'));
     html+=`<tr><td>${KAT_LABEL[k]}</td>`;
     isimler.forEach(a=>{
-      const row=tahminler.find(r=>getCol(r,'isim soyisim').trim()===a)||{};
+      const row=tahminler.find(r=>getIsim(r)===a)||{};
       const tah=getCol(row,tahCol).trim();
       const isWin=gerceklesen&&nameMatch(tah,getCol(sonRow,'gerceklesen_kisi'));
       html+=`<td class="${isWin?'cell-win':'cell-open'}">${tah||'—'}</td>`;

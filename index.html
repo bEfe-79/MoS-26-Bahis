@@ -150,21 +150,18 @@ function parseCSV(text){
 
   const rawHeaders = lines[0].split(',').map(h=>cleanStr(h));
 
-  const headers = rawHeaders.map(h=>{
-    const n = normalize(h);
-    if(n.startsWith('kategori')) return 'kategori';
+  const firstKey = normalize(rawHeaders[0]);
+  const isMerged = firstKey.startsWith('kategori') && firstKey !== 'kategori';
+  const mergedFirstVal = isMerged ? rawHeaders[0].replace(/^kategori\s+/i,'').trim() : null;
+
+  const headers = rawHeaders.map((h,i)=>{
+    if(i===0 && isMerged) return 'kategori';
     return h;
   });
 
-  let dataLines = lines.slice(1);
+  const dataLines = lines.slice(1);
 
-  if(normalize(rawHeaders[0]).startsWith('kategori') && normalize(rawHeaders[0])!=='kategori'){
-    const firstVal = normalize(rawHeaders[0]).replace(/^kategori\s*/,'');
-    const fakeFirstLine = firstVal + ',' + dataLines[0].split(',').slice(1).join(',');
-    dataLines = [fakeFirstLine, ...dataLines.slice(1)];
-  }
-
-  return dataLines.map(line=>{
+  const rows = dataLines.map((line,lineIdx)=>{
     const vals=[];
     let cur='', inQ=false;
     for(let i=0;i<line.length;i++){
@@ -175,9 +172,17 @@ function parseCSV(text){
     }
     vals.push(cleanStr(cur));
     const obj={};
-    headers.forEach((h,i)=>obj[h]=vals[i]||'');
+    headers.forEach((h,i)=>{
+      if(i===0 && isMerged && lineIdx===0){
+        obj[h] = mergedFirstVal||'';
+      } else {
+        obj[h]=vals[i]||'';
+      }
+    });
     return obj;
   }).filter(r=>Object.values(r).some(v=>v!==''));
+
+  return rows;
 }
 
 function normalize(s){
@@ -265,8 +270,10 @@ async function loadData(){
     const sonuclar=parseCSV(sonuclarText);
     const tahminler=parseCSV(tahminlerText);
     console.log('SONUCLAR keys:', sonuclar[0]?Object.keys(sonuclar[0]):[]);
+    console.log('SONUCLAR row0:', sonuclar[0]);
     console.log('SONUCLAR rows:', sonuclar.map(r=>getCol(r,'kategori')+'|'+getCol(r,'gerceklesen_kisi')));
     console.log('TAHMINLER keys:', tahminler[0]?Object.keys(tahminler[0]):[]);
+    console.log('TAHMINLER row0:', tahminler[0]);
     renderOzet(sonuclar, tahminler);
     renderTahminler(sonuclar, tahminler);
 

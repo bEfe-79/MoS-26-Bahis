@@ -237,6 +237,7 @@ function renderOzet(sonuclar,tahminler){
     if(!grc)return;
     tahminler.forEach(r=>{
       const isim=getIsimSoyisim(r);
+      if(!isim) return;
       const tah=getCol(r,KAT_TAH[k]);
       if(nameMatch(tah,grc)){kazMap[k].push(isim);if(skorlar[isim]!==undefined)skorlar[isim]++;}
     });
@@ -272,10 +273,14 @@ function renderOzet(sonuclar,tahminler){
     else if(exVal&&k==='Satisa Donen Randevu')parts.push(exVal);
 
     const winners=kazMap[k]||[];
-    let wHtml=done&&winners.length>0
-      ?winners.map((w,i)=>'<div class="winner-row"><span class="winner-num">'+(i+1)+'.</span><span class="winner-dot"></span>'+w+'</div>').join('')
-      :done?'<div class="pending-name">Kimse bilmedi</div>'
-      :'<div class="pending-name">Henuz belli degil</div>';
+    let wHtml='';
+    if(done&&winners.length>0){
+      wHtml=winners.map((w,i)=>'<div class="winner-row"><span class="winner-num">'+(i+1)+'.</span><span class="winner-dot"></span>'+(w||'?')+'</div>').join('');
+    }else if(done){
+      wHtml='<div class="pending-name">Kimse bilmedi</div>';
+    }else{
+      wHtml='<div class="pending-name">Henuz belli degil</div>';
+    }
 
     let lHtml='';
     if(!done&&exVal){

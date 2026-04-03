@@ -33,7 +33,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .stat-value{font-size:21px;font-weight:500;color:#111;}
 .stat-value.accent{color:#db0962;}
 .stat-sub{font-size:12px;color:#bbb;margin-top:3px;}
-.section-title{font-size:11px;font-weight:500;color:#bbb;text-transform:uppercase;letter-spacing:.7px;margin:4px 0 12px;}
+.section-title{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.7px;margin:4px 0 12px;}
 .bets-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:8px;}
 @media(max-width:700px){.bets-grid{grid-template-columns:1fr;}}
 .bets-group{margin-bottom:20px;}
@@ -41,22 +41,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bet-card{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:hidden;}
 .bet-card.done{border-left:3px solid #db0962;border-radius:0 12px 12px 0;}
 .bet-card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 9px;border-bottom:0.5px solid #f0eeeb;}
-.bet-cat{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.4px;}
+.bet-cat{font-size:11px;font-weight:500;color:#555;text-transform:uppercase;letter-spacing:.4px;}
 .pill{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;}
 .pill-done{background:#fce8f1;color:#db0962;}
-.pill-open{background:#f0eeeb;color:#aaa;}
+.pill-open{background:#f0eeeb;color:#777;}
+.pill-devam{background:#1b7e3e;color:#fff;animation:pillpulse 1.6s ease-in-out infinite;}
+.pill-baslamamadi{background:#f0eeeb;color:#777;}
+@keyframes pillpulse{0%,100%{opacity:1}50%{opacity:.55}}
 .bet-section{padding:10px 14px;border-bottom:0.5px solid #f7f6f4;}
 .bet-section:last-child{border-bottom:none;}
-.bet-section-label{font-size:10px;color:#ccc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.bet-section-label{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
 .result-person{font-size:13px;font-weight:500;color:#db0962;}
-.result-detail{font-size:11px;color:#aaa;margin-top:1px;}
+.result-detail{font-size:11px;color:#666;margin-top:1px;}
 .winners-list{display:flex;flex-direction:column;gap:3px;}
-.winner-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#555;}
-.winner-num{font-size:10px;color:#ccc;width:12px;}
+.winner-row{display:flex;align-items:center;gap:6px;font-size:12px;color:#333;}
+.winner-num{font-size:10px;color:#aaa;width:12px;}
 .winner-dot{width:5px;height:5px;border-radius:50%;background:#db0962;flex-shrink:0;}
-.pending-name{font-size:12px;color:#aaa;font-style:italic;}
-.current-leader{font-size:13px;font-weight:500;color:#555;}
-.current-detail{font-size:11px;color:#aaa;margin-top:1px;}
+.pending-name{font-size:12px;color:#888;font-style:italic;}
+.current-leader{font-size:13px;font-weight:500;color:#333;}
+.current-detail{font-size:11px;color:#666;margin-top:1px;}
 .bets-table-wrap{background:#fff;border-radius:12px;border:0.5px solid #e5e3de;overflow:hidden;margin-bottom:20px;}
 table{width:100%;border-collapse:collapse;font-size:13px;}
 thead tr{background:#fafaf9;}
@@ -271,6 +274,18 @@ function renderOzet(sonuclar,tahminler){
     const sr=findRow(sonuclar,'kategori',k)||{};
     const grc=getCol(sr,'gerceklesen_kisi');
     const done=grc!=='';
+    const durum=getCol(sr,'durum').trim();
+
+    let pillClass, pillLabel;
+    if(durum==='Sonuclandi'||done){
+      pillClass='pill-done'; pillLabel='Sonuclandi';
+    } else if(durum==='Devam Ediyor'){
+      pillClass='pill-devam'; pillLabel='Devam Ediyor';
+    } else if(durum==='Baslamamadi'||durum===''){
+      pillClass='pill-baslamamadi'; pillLabel='Baslamamadi';
+    } else {
+      pillClass='pill-baslamamadi'; pillLabel=durum;
+    }
     const parts=[];
     const tarih=getCol(sr,'tarih'); if(tarih)parts.push(tarih);
     const saat=getCol(sr,'saat'); if(saat)parts.push(saat);
@@ -299,7 +314,7 @@ function renderOzet(sonuclar,tahminler){
       else lHtml='<div class="current-detail">'+fmt(exVal)+'</div>';
     }
 
-    h+='<div class="bet-card '+(done?'done':'')+'"><div class="bet-card-header"><span class="bet-cat">'+KAT_LABEL[k]+'</span><span class="pill '+(done?'pill-done':'pill-open')+'">'+(done?'Sonuclandi':'Devam Ediyor')+'</span></div>'
+    h+='<div class="bet-card '+(done?'done':'')+'"><div class="bet-card-header"><span class="bet-cat">'+KAT_LABEL[k]+'</span><span class="pill '+pillClass+'">'+pillLabel+'</span></div>'
       +'<div class="bet-section"><div class="bet-section-label">'+(done?'Gerceklesen':'Suanki Lider')+'</div>'
       +(done?'<div class="result-person">'+grc+'</div><div class="result-detail">'+parts.join(' · ')+'</div>':'<div class="current-leader">'+(grc||'—')+'</div>'+lHtml)
       +'</div><div class="bet-section"><div class="bet-section-label">Kazananlar</div><div class="winners-list">'+wHtml+'</div></div></div>';

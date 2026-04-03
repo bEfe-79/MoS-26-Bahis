@@ -277,14 +277,12 @@ function renderOzet(sonuclar,tahminler){
     const durum=getCol(sr,'durum').trim();
 
     let pillClass, pillLabel;
-    if(durum==='Sonuclandi'||done){
+    if(durum==='Sonuclandi'){
       pillClass='pill-done'; pillLabel='Sonuclandi';
     } else if(durum==='Devam Ediyor'){
       pillClass='pill-devam'; pillLabel='Devam Ediyor';
-    } else if(durum==='Baslamamadi'||durum===''){
-      pillClass='pill-baslamamadi'; pillLabel='Baslamamadi';
     } else {
-      pillClass='pill-baslamamadi'; pillLabel=durum;
+      pillClass='pill-baslamamadi'; pillLabel=durum||'Baslamamadi';
     }
     const parts=[];
     const tarih=getCol(sr,'tarih'); if(tarih)parts.push(tarih);

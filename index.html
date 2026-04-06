@@ -122,7 +122,7 @@ tbody td{padding:10px 14px;color:#333;vertical-align:middle;}
 </div>
 
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbxJvpfwNW9FVPwWcqXCf6bfsQvTY6MZC53Yqsx527cTB-hPhSJioHWJKRcWz-Y2Fn8gVQ/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbyNR7vnRvUq0HxuOmVFxL4r7_LStkq2vm4knm1Rbutsl40pI6vp51vcylmIX1ZLCEvYVg/exec';
 const CUP_GOLD='#b8860b',CUP_SILVER='#8a8a8a',CUP_BRONZE='#a0522d',CUP_OTHER='#db0962';
 
 function cupSVG(c){return '<svg viewBox="0 0 18 18" fill="none" style="width:18px;height:18px;display:inline-block;vertical-align:middle;"><path d="M5 2h8v6a4 4 0 0 1-8 0V2z" fill="'+c+'" opacity=".9"/><path d="M3 2h2v3a2 2 0 0 1-2-2V2z" fill="'+c+'" opacity=".5"/><path d="M13 2h2v1a2 2 0 0 1-2 2V2z" fill="'+c+'" opacity=".5"/><rect x="7.5" y="11" width="3" height="3" fill="'+c+'" opacity=".7"/><rect x="5.5" y="14" width="7" height="1.5" rx="0.5" fill="'+c+'" opacity=".8"/></svg>';}
@@ -177,19 +177,10 @@ function fmtDate(s){
 
 function fmtDateTime(dateStr, timeStr){
   if(!dateStr||dateStr==='')return'';
-  try{
-    const d=new Date(dateStr);
-    if(isNaN(d.getTime()))return String(dateStr);
-    const gun=('0'+d.getUTCDate()).slice(-2);
-    const ay=('0'+(d.getUTCMonth()+1)).slice(-2);
-    const yil=d.getUTCFullYear();
-    const tarih=gun+'.'+ay+'.'+yil;
-    if(!timeStr||timeStr==='')return tarih;
-    const t=new Date(timeStr);
-    if(isNaN(t.getTime()))return tarih;
-    const saat=('0'+t.getUTCHours()).slice(-2)+':'+('0'+t.getUTCMinutes()).slice(-2);
-    return tarih+' '+saat;
-  }catch(e){return String(dateStr);}
+  const tarih=fmtDate(dateStr);
+  if(!timeStr||timeStr==='')return tarih;
+  const saat=fmtDate(timeStr);
+  return tarih+(saat?' '+saat:'');
 }
 
 function fmt(n){
@@ -298,14 +289,15 @@ function renderOzet(sonuclar,tahminler){
     const grc=getCol(sr,'gerceklesen_kisi');
     const done=grc!=='';
     const durum=getCol(sr,'durum').trim();
+    const durumNorm=norm(durum);
 
     let pillClass, pillLabel;
-    if(durum==='Sonuclandi'){
-      pillClass='pill-done'; pillLabel='Sonuclandi';
-    } else if(durum==='Devam Ediyor'){
+    if(durumNorm==='sonuclandi'){
+      pillClass='pill-done'; pillLabel='Sonuçlandı';
+    } else if(durumNorm==='devam ediyor'){
       pillClass='pill-devam'; pillLabel='Devam Ediyor';
     } else {
-      pillClass='pill-baslamamadi'; pillLabel=durum||'Baslamamadi';
+      pillClass='pill-baslamamadi'; pillLabel=durum||'Başlamadı';
     }
     const parts=[];
     const tarih=getCol(sr,'tarih');

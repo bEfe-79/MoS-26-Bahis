@@ -162,31 +162,22 @@ function nameMatch(a,b){
 
 function fmtDate(s){
   if(!s||s==='')return'';
-  try{
-    const d=new Date(s);
-    if(isNaN(d.getTime()))return String(s);
-    if(String(s).includes('1899')){
-      return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);
-    }
-    const gun=('0'+d.getUTCDate()).slice(-2);
-    const ay=('0'+(d.getUTCMonth()+1)).slice(-2);
-    const yil=d.getUTCFullYear();
-    return gun+'.'+ay+'.'+yil;
-  }catch(e){return String(s);}
+  return String(s);
 }
 
 function fmtDateTime(dateStr, timeStr){
   if(!dateStr||dateStr==='')return'';
-  const tarih=fmtDate(dateStr);
+  const tarih=String(dateStr);
   if(!timeStr||timeStr==='')return tarih;
-  const saat=fmtDate(timeStr);
-  return tarih+(saat?' '+saat:'');
+  return tarih+' '+String(timeStr);
 }
 
 function fmt(n){
   if(!n||n==='')return'';
-  const num=parseFloat(String(n).replace(/[^0-9.]/g,''));
-  if(isNaN(num))return String(n);
+  const s=String(n).trim();
+  const cleaned=s.replace(/\./g,'').replace(',','.');
+  const num=parseFloat(cleaned);
+  if(isNaN(num))return s;
   return '\u20ba'+Math.round(num).toLocaleString('tr-TR');
 }
 

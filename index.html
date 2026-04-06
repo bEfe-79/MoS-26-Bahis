@@ -263,7 +263,7 @@ function renderOzet(sonuclar,tahminler){
 
   let h='<div class="summary-row">'
     +'<div class="stat-card"><div class="stat-label">Toplam Bahis</div><div class="stat-value">6</div><div class="stat-sub">kategori</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Sonuclanan</div><div class="stat-value accent">'+snc+'</div><div class="stat-sub">/ 6 kategori</div></div>'
+    +'<div class="stat-card"><div class="stat-label">Sonuclanan / Devam Eden</div><div class="stat-value accent">'+snc+'</div><div class="stat-sub">/ 6 kategori</div></div>'
     +'<div class="stat-card"><div class="stat-label">Lider</div><div class="stat-value" style="font-size:15px;padding-top:3px;">'+(sorted[0]?.[0]?.split(' ')[0]||'—')+'</div><div class="stat-sub">'+(sorted[0]?.[1]||0)+' dogru tahmin</div></div>'
     +'<div class="stat-card"><div class="stat-label">En Yuksek Ciro</div><div class="stat-value accent" style="font-size:17px;">'+(tcVal?fmt(tcVal):'—')+'</div><div class="stat-sub">'+(tcKisi||'bekleniyor')+'</div></div>'
     +'</div>';

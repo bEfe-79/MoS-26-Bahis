@@ -299,8 +299,8 @@ function renderOzet(sonuclar,tahminler){
     const exVal=EXTRA_COL[k]?getCol(sr,EXTRA_COL[k]):'';
     if(ciro)parts.push(fmt(ciro));
     else if(exVal&&k==='En Yuksek Ciro')parts.push(fmt(exVal));
-    else if(exVal&&k==='En Yuksek Satis')parts.push(exVal+' adet');
-    else if(exVal&&k==='En Fazla Randevu')parts.push(exVal+' randevu');
+    else if(exVal&&k==='En Yuksek Satis')parts.push(exVal+' Paket');
+    else if(exVal&&k==='En Fazla Randevu')parts.push(exVal+' Randevu');
     else if(exVal&&k==='Satisa Donen Randevu')parts.push(exVal);
 
     const winners=kazMap[k]||[];

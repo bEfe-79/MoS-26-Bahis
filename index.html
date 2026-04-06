@@ -166,11 +166,12 @@ function fmtDate(s){
     const d=new Date(s);
     if(isNaN(d.getTime()))return String(s);
     if(String(s).includes('1899')){
-      const utcH=d.getUTCHours(), utcM=d.getUTCMinutes();
-      const istH=(utcH+3)%24;
-      return ('0'+istH).slice(-2)+':'+('0'+utcM).slice(-2);
+      return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);
     }
-    return d.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Istanbul'});
+    const gun=('0'+d.getUTCDate()).slice(-2);
+    const ay=('0'+(d.getUTCMonth()+1)).slice(-2);
+    const yil=d.getUTCFullYear();
+    return gun+'.'+ay+'.'+yil;
   }catch(e){return String(s);}
 }
 
@@ -179,13 +180,14 @@ function fmtDateTime(dateStr, timeStr){
   try{
     const d=new Date(dateStr);
     if(isNaN(d.getTime()))return String(dateStr);
-    const tarih=d.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Istanbul'});
+    const gun=('0'+d.getUTCDate()).slice(-2);
+    const ay=('0'+(d.getUTCMonth()+1)).slice(-2);
+    const yil=d.getUTCFullYear();
+    const tarih=gun+'.'+ay+'.'+yil;
     if(!timeStr||timeStr==='')return tarih;
     const t=new Date(timeStr);
     if(isNaN(t.getTime()))return tarih;
-    const utcH=t.getUTCHours(), utcM=t.getUTCMinutes();
-    const istH=(utcH+3)%24;
-    const saat=('0'+istH).slice(-2)+':'+('0'+utcM).slice(-2);
+    const saat=('0'+t.getUTCHours()).slice(-2)+':'+('0'+t.getUTCMinutes()).slice(-2);
     return tarih+' '+saat;
   }catch(e){return String(dateStr);}
 }

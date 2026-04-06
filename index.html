@@ -43,10 +43,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .bet-card-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 9px;border-bottom:0.5px solid #f0eeeb;}
 .bet-cat{font-size:11px;font-weight:500;color:#555;text-transform:uppercase;letter-spacing:.4px;}
 .pill{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;}
-.pill-done{background:#fce8f1;color:#db0962;}
+.pill-done{background:#db0962;color:#fff;animation:pillpulse 1.6s ease-in-out infinite;}
 .pill-open{background:#f0eeeb;color:#777;}
 .pill-devam{background:#1b7e3e;color:#fff;animation:pillpulse 1.6s ease-in-out infinite;}
 .pill-baslamamadi{background:#f0eeeb;color:#777;}
+.pill-beklemede{background:#f0eeeb;color:#777;}
 @keyframes pillpulse{0%,100%{opacity:1}50%{opacity:.55}}
 .bet-section{padding:10px 14px;border-bottom:0.5px solid #f7f6f4;}
 .bet-section:last-child{border-bottom:none;}
@@ -164,9 +165,29 @@ function fmtDate(s){
   try{
     const d=new Date(s);
     if(isNaN(d.getTime()))return String(s);
-    if(String(s).includes('1899'))return ('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2);
-    return d.toLocaleDateString('tr-TR');
+    if(String(s).includes('1899')){
+      const utcH=d.getUTCHours(), utcM=d.getUTCMinutes();
+      const istH=(utcH+3)%24;
+      return ('0'+istH).slice(-2)+':'+('0'+utcM).slice(-2);
+    }
+    return d.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Istanbul'});
   }catch(e){return String(s);}
+}
+
+function fmtDateTime(dateStr, timeStr){
+  if(!dateStr||dateStr==='')return'';
+  try{
+    const d=new Date(dateStr);
+    if(isNaN(d.getTime()))return String(dateStr);
+    const tarih=d.toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Europe/Istanbul'});
+    if(!timeStr||timeStr==='')return tarih;
+    const t=new Date(timeStr);
+    if(isNaN(t.getTime()))return tarih;
+    const utcH=t.getUTCHours(), utcM=t.getUTCMinutes();
+    const istH=(utcH+3)%24;
+    const saat=('0'+istH).slice(-2)+':'+('0'+utcM).slice(-2);
+    return tarih+' '+saat;
+  }catch(e){return String(dateStr);}
 }
 
 function fmt(n){
@@ -285,8 +306,9 @@ function renderOzet(sonuclar,tahminler){
       pillClass='pill-baslamamadi'; pillLabel=durum||'Baslamamadi';
     }
     const parts=[];
-    const tarih=getCol(sr,'tarih'); if(tarih)parts.push(tarih);
-    const saat=getCol(sr,'saat'); if(saat)parts.push(saat);
+    const tarih=getCol(sr,'tarih');
+    const saat=getCol(sr,'saat');
+    if(tarih)parts.push(fmtDateTime(tarih,saat));
     const firma=getCol(sr,'firma_adi'); if(firma)parts.push(firma);
     const ciro=getCol(sr,'ciro');
     const exVal=EXTRA_COL[k]?getCol(sr,EXTRA_COL[k]):'';
